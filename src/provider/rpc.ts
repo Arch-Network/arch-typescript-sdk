@@ -121,7 +121,7 @@ export class RpcConnection implements Provider {
    * @returns A promise that resolves with the block information.
    */
   async getBlock(blockHash: string): Promise<Block | undefined> {
-    const result = await postData(this.nodeUrl, Action.GET_BLOCK, blockHash);
+    const result = await postData(this.nodeUrl, Action.GET_BLOCK, [blockHash]);
 
     try {
       return processResult<Block>(result);
@@ -297,7 +297,7 @@ export class RpcConnection implements Provider {
     filter?: BlockTransactionFilter,
   ): Promise<Block | undefined> {
     try {
-      const params = filter ? [blockHeight, filter] : [blockHeight, null];
+      const params = filter ? [blockHeight, filter] : [blockHeight];
       const blockData = await postData(
         this.nodeUrl,
         Action.GET_BLOCK_BY_HEIGHT,
