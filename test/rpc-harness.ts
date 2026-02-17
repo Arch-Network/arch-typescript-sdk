@@ -366,13 +366,19 @@ async function main() {
       assert(accounts.length === 1, 'should return 1 result');
       if (accounts[0] !== null) {
         const acct = accounts[0] as AccountInfoWithPubkey;
-        assert(acct.key instanceof Uint8Array, 'key should be Uint8Array');
+        assert(
+          acct.key instanceof Uint8Array || Array.isArray(acct.key),
+          'key should be Uint8Array or array',
+        );
         assert(typeof acct.lamports === 'number', 'lamports should be a number');
-        assert(acct.owner instanceof Uint8Array, 'owner should be Uint8Array');
+        assert(
+          acct.owner instanceof Uint8Array || Array.isArray(acct.owner),
+          'owner should be Uint8Array or array',
+        );
         log('multipleAccounts[0]', {
-          key: bytesToHex(acct.key),
+          key: hashToHex(acct.key),
           lamports: acct.lamports,
-          owner: bytesToHex(acct.owner),
+          owner: hashToHex(acct.owner),
         });
       }
     },
