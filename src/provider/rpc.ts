@@ -1,6 +1,6 @@
 import { Action } from '../constants';
-import { AccountInfoResult } from '../struct/account';
-import { Block } from '../struct/block';
+import { AccountInfoResult, AccountInfoWithPubkey } from '../struct/account';
+import { Block, FullBlock } from '../struct/block';
 import { ProcessedTransaction } from '../struct/processed-transaction';
 import { Pubkey } from '../struct/pubkey';
 import { RuntimeTransaction } from '../struct/runtime-transaction';
@@ -103,6 +103,19 @@ export class RpcConnection implements Provider {
   }
 
   /**
+   * Gets the best finalized block hash.
+   * @returns A promise that resolves with the best finalized block hash.
+   */
+  async getBestFinalizedBlockHash(): Promise<string> {
+    const result = await postData(
+      this.nodeUrl,
+      Action.GET_BEST_FINALIZED_BLOCK_HASH,
+    );
+
+    return processResult<string>(result);
+  }
+
+  /**
    * Gets block information for a given hash.
    * @param blockHash The block hash.
    * @returns A promise that resolves with the block information.
@@ -119,6 +132,52 @@ export class RpcConnection implements Provider {
         }
       }
 
+      throw error;
+    }
+  }
+
+  /**
+   * Gets a full block by hash with complete transaction details.
+   * @param blockHash The block hash.
+   * @returns A promise that resolves with the full block or undefined if not found.
+   */
+  async getFullBlockByHash(
+    blockHash: string,
+  ): Promise<FullBlock | undefined> {
+    const params = [blockHash, BlockTransactionFilter.FULL];
+    const result = await postData(this.nodeUrl, Action.GET_BLOCK, params);
+
+    try {
+      return processResult<FullBlock>(result);
+    } catch (error: any) {
+      if (error instanceof ArchRpcError && error.error.code === NOT_FOUND) {
+        return undefined;
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Gets a full block by height with complete transaction details.
+   * @param blockHeight The block height.
+   * @returns A promise that resolves with the full block or undefined if not found.
+   */
+  async getFullBlockByHeight(
+    blockHeight: number,
+  ): Promise<FullBlock | undefined> {
+    const params = [blockHeight, BlockTransactionFilter.FULL];
+    const result = await postData(
+      this.nodeUrl,
+      Action.GET_BLOCK_BY_HEIGHT,
+      params,
+    );
+
+    try {
+      return processResult<FullBlock>(result);
+    } catch (error: any) {
+      if (error instanceof ArchRpcError && error.error.code === NOT_FOUND) {
+        return undefined;
+      }
       throw error;
     }
   }
@@ -304,16 +363,42 @@ export class RpcConnection implements Provider {
   /**
    * Gets multiple accounts by their public keys.
    * @param pubkeys Array of public keys.
-   * @returns A promise that resolves with an array of AccountInfoResult or null for missing accounts.
+   * @returns A promise that resolves with an array of AccountInfoWithPubkey or null for missing accounts.
    */
   async getMultipleAccounts(
     pubkeys: Pubkey[],
-  ): Promise<(AccountInfoResult | null)[]> {
+  ): Promise<(AccountInfoWithPubkey | null)[]> {
     const result = await postData(
       this.nodeUrl,
       Action.GET_MULTIPLE_ACCOUNTS,
       serializeWithUint8Array(pubkeys),
     );
-    return processResult<(AccountInfoResult | null)[]>(result);
+    return processResult<(AccountInfoWithPubkey | null)[]>(result);
+  }
+
+  /**
+   * Gets the network public key.
+   * @returns A promise that resolves with the network public key string.
+   */
+  async getNetworkPubkey(): Promise<string> {
+    const result = await postData(
+      this.nodeUrl,
+      Action.GET_NETWORK_PUBKEY,
+    );
+    return processResult<string>(result);
+  }
+
+  /**
+   * Checks for pre-anchor conflicts on a set of accounts.
+   * @param accounts Array of public keys to check for conflicts.
+   * @returns A promise that resolves with true if there is a conflict.
+   */
+  async checkPreAnchorConflict(accounts: Pubkey[]): Promise<boolean> {
+    const result = await postData(
+      this.nodeUrl,
+      Action.CHECK_PRE_ANCHOR_CONFLICT,
+      serializeWithUint8Array(accounts),
+    );
+    return processResult<boolean>(result);
   }
 }

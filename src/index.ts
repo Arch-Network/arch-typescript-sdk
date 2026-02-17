@@ -2,11 +2,12 @@ export { RpcConnection } from './provider/rpc';
 export { Maestro } from './provider/maestro/maestro';
 export type { Arch } from './arch';
 export { ArchConnection } from './arch';
-export { Action } from './constants';
+export { Action, RUNTIME_TX_SIZE_LIMIT, MAX_TX_BATCH_SIZE } from './constants';
 export type {
   AccountInfo,
   AccountMeta,
   AccountInfoResult,
+  AccountInfoWithPubkey,
   CreatedAccount,
   CreatedPdaAccount,
 } from './struct/account';
@@ -22,10 +23,10 @@ export type { MessageHeader } from './struct/header';
 export { MessageHeaderSchema } from './struct/header';
 export type { Pubkey } from './struct/pubkey';
 export { PubkeySchema } from './struct/pubkey';
-export type { RuntimeTransaction } from './struct/runtime-transaction';
+export type { RuntimeTransaction, Signature } from './struct/runtime-transaction';
 export type { UtxoMeta, UtxoMetaData } from './struct/utxo';
 export { UtxoMetaSchema } from './struct/utxo';
-export type { Block } from './struct/block';
+export type { Block, FullBlock } from './struct/block';
 export * as MessageUtil from './serde/message';
 export * as SanitizedMessageUtil from './serde/sanitized-message';
 export * as PubkeyUtil from './serde/pubkey';
@@ -38,6 +39,9 @@ export type {
   ProcessedTransaction,
   ProcessedTransactionStatus,
   RollbackStatus,
+  InnerInstruction,
+  InnerInstructions,
+  InnerInstructionsList,
 } from './struct/processed-transaction';
 export * as SignatureUtil from './signatures';
 export { ArchRpcError } from './utils';
@@ -45,6 +49,13 @@ export { ArchRpcError } from './utils';
 export * as SystemInstruction from './system-instructions/system-instructions';
 export * as ComputeBudget from './system-instructions/compute-budget';
 export { minimumRent, isExempt } from './rent/rent';
+
+export type { AccountFilter, ProgramAccount } from './struct/program-account';
+export type { BlockTransactionsParams } from './struct/block-transactions-params';
+export type { TransactionsByIdsParams } from './struct/transactions-by-ids-params';
+export type { TransactionListParams } from './struct/transaction-list-params';
+export { BlockTransactionFilter } from './struct/block-transaction-filter';
+export type { Provider } from './provider/provider';
 
 // websocket
 export { ArchWebSocketClient } from './websocket-client/arch-web-socket-client';

@@ -3,8 +3,8 @@ import {
   SerializeUint8Array,
   serializeWithUint8Array,
 } from '../../serde/uint8array';
-import { AccountInfoResult } from '../../struct/account';
-import { Block } from '../../struct/block';
+import { AccountInfoResult, AccountInfoWithPubkey } from '../../struct/account';
+import { Block, FullBlock } from '../../struct/block';
 import { BlockTransactionFilter } from '../../struct/block-transaction-filter';
 import { BlockTransactionsParams } from '../../struct/block-transactions-params';
 import { ProcessedTransaction } from '../../struct/processed-transaction';
@@ -341,7 +341,29 @@ export class Maestro implements Provider {
 
   async getMultipleAccounts(
     pubkeys: Pubkey[],
-  ): Promise<(AccountInfoResult | null)[]> {
+  ): Promise<(AccountInfoWithPubkey | null)[]> {
+    throw new Error('Not implemented');
+  }
+
+  async getBestFinalizedBlockHash(): Promise<string> {
+    throw new Error('Not implemented');
+  }
+
+  async getFullBlockByHash(blockHash: string): Promise<FullBlock | undefined> {
+    throw new Error('Not implemented');
+  }
+
+  async getFullBlockByHeight(
+    blockHeight: number,
+  ): Promise<FullBlock | undefined> {
+    throw new Error('Not implemented');
+  }
+
+  async getNetworkPubkey(): Promise<string> {
+    throw new Error('Not implemented');
+  }
+
+  async checkPreAnchorConflict(accounts: Pubkey[]): Promise<boolean> {
     throw new Error('Not implemented');
   }
 
