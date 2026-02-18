@@ -1,8 +1,8 @@
 {
-  "name": "@saturnbtcio/arch-sdk",
-  "version": "0.0.24",
+  "name": "@arch-network/arch-sdk",
+  "version": "0.0.25",
   "description": "Arch SDK",
-  "author": "Saturn BTC",
+  "author": "Arch Network",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "publishConfig": {
@@ -15,16 +15,18 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/SaturnBTC/arch-typescript-sdk.git"
+    "url": "https://github.com/Arch-Network/arch-typescript-sdk.git"
   },
   "bugs": {
-    "url": "https://github.com/SaturnBTC/arch-typescript-sdk/issues"
+    "url": "https://github.com/Arch-Network/arch-typescript-sdk/issues"
   },
-  "homepage": "https://github.com/SaturnBTC/arch-typescript-sdk#readme",
+  "homepage": "https://github.com/Arch-Network/arch-typescript-sdk#readme",
   "keywords": [
-    "saturn",
     "arch",
-    "sdk"
+    "arch-network",
+    "sdk",
+    "bitcoin",
+    "typescript"
   ],
   "scripts": {
     "build": "tsup src/index.ts --format cjs,esm --dts",
