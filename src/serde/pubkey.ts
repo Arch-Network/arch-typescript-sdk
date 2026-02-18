@@ -5,9 +5,7 @@ import { Pubkey } from '../struct/pubkey';
 import { sha256 } from '@noble/hashes/sha256';
 
 export const systemProgram = () => {
-  const tmp = new Uint8Array(32);
-  tmp[31] = 1;
-  return tmp as Pubkey;
+  return new Uint8Array(32) as Pubkey;
 };
 
 export const fromHex = (hex: string) => {

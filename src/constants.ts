@@ -29,10 +29,7 @@ export const ASSOCIATED_TOKEN_PROGRAM_ID = new Uint8Array([
   97, 115, 115, 111, 99, 105, 97, 116, 101, 100, 45, 116, 111, 107, 101, 110,
   45, 97, 99, 99, 111, 117, 110, 116, 48, 48, 48, 48, 48, 48, 48, 48,
 ]);
-export const SYSTEM_PROGRAM_ID = new Uint8Array([
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-  0, 0, 0, 0, 0, 1,
-]);
+export const SYSTEM_PROGRAM_ID = new Uint8Array(32);
 // Buffer.from("BpfLoader11111111111111111111111", "utf8");
 export const BPF_LOADER_PROGRAM_ID = new Uint8Array([
   66, 112, 102, 76, 111, 97, 100, 101, 114, 49, 49, 49, 49, 49, 49, 49, 49, 49,

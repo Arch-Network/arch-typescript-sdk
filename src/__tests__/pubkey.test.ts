@@ -17,7 +17,7 @@ describe('assert that pubkey serializes as expected', () => {
   it('matches the system program pubkey', () => {
     const borshOutput = Uint8Array.from([
       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-      0, 0, 0, 0, 0, 0, 1,
+      0, 0, 0, 0, 0, 0, 0,
     ]);
     const serialized = serialize(PubkeySchema, systemProgram());
 
