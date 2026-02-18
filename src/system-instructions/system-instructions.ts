@@ -3,40 +3,51 @@ import { AccountMeta } from '../struct/account';
 import { Pubkey } from '../struct/pubkey';
 import { SYSTEM_PROGRAM_ID } from '../constants';
 
+/**
+ * Enum discriminant values must match the order in the Rust
+ * `SystemInstruction` enum (arch-network program/src/system_instruction.rs).
+ */
 export enum SystemInstruction {
   CreateAccount = 0,
   CreateAccountWithAnchor = 1,
   Assign = 2,
   Anchor = 3,
-  Transfer = 4,
-  Allocate = 5,
-  AdvanceNonceAccount = 6,
-  WithdrawNonceAccount = 7,
-  InitializeNonceAccount = 8,
-  AuthorizeNonceAccount = 9,
+  SignInput = 4,
+  Transfer = 5,
+  Allocate = 6,
+  CreateAccountWithSeed = 7,
+  AllocateWithSeed = 8,
+  AssignWithSeed = 9,
+  TransferWithSeed = 10,
 }
 
-// Converts a number (u32) to a 4-byte Uint8Array in little-endian order.
 export const u32ToLeBytes = (num: number): Uint8Array => {
   const arr = new Uint8Array(4);
   new DataView(arr.buffer).setUint32(0, num, true);
   return arr;
 };
 
-// Converts a bigint (u64) to an 8-byte Uint8Array in little-endian order.
 export const u64ToLeBytes = (num: bigint): Uint8Array => {
   const arr = new Uint8Array(8);
   const view = new DataView(arr.buffer);
-  view.setUint32(0, Number(num & 0xffffffffn), true); // lower 32 bits
-  view.setUint32(4, Number((num >> 32n) & 0xffffffffn), true); // Upper 32 bits
+  view.setUint32(0, Number(num & 0xffffffffn), true);
+  view.setUint32(4, Number((num >> 32n) & 0xffffffffn), true);
   return arr;
 };
 
-// Converts a 64-character hex string (representing 32 bytes) to a Uint8Array.
 export const hexStringToUint8Array = (hex: string): Uint8Array => {
   if (hex.length !== 64)
     throw new Error('txid hex string must be 64 characters');
   return new Uint8Array(Buffer.from(hex, 'hex'));
+};
+
+const encodeString = (str: string): Uint8Array => {
+  const bytes = new TextEncoder().encode(str);
+  const lenBytes = u64ToLeBytes(BigInt(bytes.length));
+  const result = new Uint8Array(lenBytes.length + bytes.length);
+  result.set(lenBytes);
+  result.set(bytes, lenBytes.length);
+  return result;
 };
 
 export const createAccount = (
@@ -147,6 +158,22 @@ export const anchor = (
   };
 };
 
+export const signInput = (index: number, signer: Pubkey): Instruction => {
+  const discriminant = u32ToLeBytes(SystemInstruction.SignInput);
+  const indexArray = u32ToLeBytes(index);
+  const data = new Uint8Array([...discriminant, ...indexArray]);
+
+  const accounts: AccountMeta[] = [
+    { pubkey: signer, is_signer: true, is_writable: true },
+  ];
+
+  return {
+    program_id: SYSTEM_PROGRAM_ID,
+    accounts,
+    data,
+  };
+};
+
 export const transfer = (
   fromPubkey: Pubkey,
   toPubkey: Pubkey,
@@ -184,18 +211,74 @@ export const allocate = (pubkey: Pubkey, space: bigint): Instruction => {
   };
 };
 
-export const advanceNonceAccount = (
-  noncePubkey: Pubkey,
-  recentBlockhashesSysvar: Pubkey,
-  authorizedPubkey: Pubkey,
+export const createAccountWithSeed = (
+  fromPubkey: Pubkey,
+  toPubkey: Pubkey,
+  base: Pubkey,
+  seed: string,
+  lamports: bigint,
+  space: bigint,
+  owner: Pubkey,
 ): Instruction => {
-  const discriminant = u32ToLeBytes(SystemInstruction.AdvanceNonceAccount);
-  const data = new Uint8Array([...discriminant]);
+  const discriminant = u32ToLeBytes(SystemInstruction.CreateAccountWithSeed);
+  const baseBytes = base;
+  const seedBytes = encodeString(seed);
+  const lamportsArray = u64ToLeBytes(lamports);
+  const spaceArray = u64ToLeBytes(space);
+  const ownerBytes = owner;
+
+  const data = new Uint8Array([
+    ...discriminant,
+    ...baseBytes,
+    ...seedBytes,
+    ...lamportsArray,
+    ...spaceArray,
+    ...ownerBytes,
+  ]);
 
   const accounts: AccountMeta[] = [
-    { pubkey: noncePubkey, is_signer: false, is_writable: true },
-    { pubkey: recentBlockhashesSysvar, is_signer: false, is_writable: false },
-    { pubkey: authorizedPubkey, is_signer: true, is_writable: false },
+    { pubkey: fromPubkey, is_signer: true, is_writable: true },
+    { pubkey: toPubkey, is_signer: false, is_writable: true },
+  ];
+
+  if (
+    base.length !== fromPubkey.length ||
+    !base.every((v, i) => v === fromPubkey[i])
+  ) {
+    accounts.push({ pubkey: base, is_signer: true, is_writable: false });
+  }
+
+  return {
+    program_id: SYSTEM_PROGRAM_ID,
+    accounts,
+    data,
+  };
+};
+
+export const allocateWithSeed = (
+  address: Pubkey,
+  base: Pubkey,
+  seed: string,
+  space: bigint,
+  owner: Pubkey,
+): Instruction => {
+  const discriminant = u32ToLeBytes(SystemInstruction.AllocateWithSeed);
+  const baseBytes = base;
+  const seedBytes = encodeString(seed);
+  const spaceArray = u64ToLeBytes(space);
+  const ownerBytes = owner;
+
+  const data = new Uint8Array([
+    ...discriminant,
+    ...baseBytes,
+    ...seedBytes,
+    ...spaceArray,
+    ...ownerBytes,
+  ]);
+
+  const accounts: AccountMeta[] = [
+    { pubkey: address, is_signer: false, is_writable: true },
+    { pubkey: base, is_signer: true, is_writable: false },
   ];
 
   return {
@@ -205,66 +288,60 @@ export const advanceNonceAccount = (
   };
 };
 
-export const withdrawNonceAccount = (
-  noncePubkey: Pubkey,
+export const assignWithSeed = (
+  address: Pubkey,
+  base: Pubkey,
+  seed: string,
+  owner: Pubkey,
+): Instruction => {
+  const discriminant = u32ToLeBytes(SystemInstruction.AssignWithSeed);
+  const baseBytes = base;
+  const seedBytes = encodeString(seed);
+  const ownerBytes = owner;
+
+  const data = new Uint8Array([
+    ...discriminant,
+    ...baseBytes,
+    ...seedBytes,
+    ...ownerBytes,
+  ]);
+
+  const accounts: AccountMeta[] = [
+    { pubkey: address, is_signer: false, is_writable: true },
+    { pubkey: base, is_signer: true, is_writable: false },
+  ];
+
+  return {
+    program_id: SYSTEM_PROGRAM_ID,
+    accounts,
+    data,
+  };
+};
+
+export const transferWithSeed = (
+  fromPubkey: Pubkey,
+  fromBase: Pubkey,
+  fromSeed: string,
+  fromOwner: Pubkey,
   toPubkey: Pubkey,
-  recentBlockhashesSysvar: Pubkey,
-  rentSysvar: Pubkey,
-  authorizedPubkey: Pubkey,
   lamports: bigint,
 ): Instruction => {
-  const discriminant = u32ToLeBytes(SystemInstruction.WithdrawNonceAccount);
+  const discriminant = u32ToLeBytes(SystemInstruction.TransferWithSeed);
   const lamportsBytes = u64ToLeBytes(lamports);
-  const data = new Uint8Array([...discriminant, ...lamportsBytes]);
+  const seedBytes = encodeString(fromSeed);
+  const ownerBytes = fromOwner;
+
+  const data = new Uint8Array([
+    ...discriminant,
+    ...lamportsBytes,
+    ...seedBytes,
+    ...ownerBytes,
+  ]);
 
   const accounts: AccountMeta[] = [
-    { pubkey: noncePubkey, is_signer: false, is_writable: true },
+    { pubkey: fromPubkey, is_signer: false, is_writable: true },
+    { pubkey: fromBase, is_signer: true, is_writable: false },
     { pubkey: toPubkey, is_signer: false, is_writable: true },
-    { pubkey: recentBlockhashesSysvar, is_signer: false, is_writable: false },
-    { pubkey: rentSysvar, is_signer: false, is_writable: false },
-    { pubkey: authorizedPubkey, is_signer: true, is_writable: false },
-  ];
-
-  return {
-    program_id: SYSTEM_PROGRAM_ID,
-    accounts,
-    data,
-  };
-};
-
-export const initializeNonceAccount = (
-  noncePubkey: Pubkey,
-  recentBlockhashesSysvar: Pubkey,
-  rentSysvar: Pubkey,
-  authority: Pubkey,
-): Instruction => {
-  const discriminant = u32ToLeBytes(SystemInstruction.InitializeNonceAccount);
-  const data = new Uint8Array([...discriminant, ...authority]);
-
-  const accounts: AccountMeta[] = [
-    { pubkey: noncePubkey, is_signer: false, is_writable: true },
-    { pubkey: recentBlockhashesSysvar, is_signer: false, is_writable: false },
-    { pubkey: rentSysvar, is_signer: false, is_writable: false },
-  ];
-
-  return {
-    program_id: SYSTEM_PROGRAM_ID,
-    accounts,
-    data,
-  };
-};
-
-export const authorizeNonceAccount = (
-  noncePubkey: Pubkey,
-  authorizedPubkey: Pubkey,
-  newAuthority: Pubkey,
-): Instruction => {
-  const discriminant = u32ToLeBytes(SystemInstruction.AuthorizeNonceAccount);
-  const data = new Uint8Array([...discriminant, ...newAuthority]);
-
-  const accounts: AccountMeta[] = [
-    { pubkey: noncePubkey, is_signer: false, is_writable: true },
-    { pubkey: authorizedPubkey, is_signer: true, is_writable: false },
   ];
 
   return {

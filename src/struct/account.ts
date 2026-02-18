@@ -26,6 +26,15 @@ export interface AccountInfoResult {
   is_executable: boolean;
 }
 
+export interface AccountInfoWithPubkey {
+  key: Pubkey;
+  lamports: number;
+  owner: Pubkey;
+  data: Uint8Array;
+  utxo: string;
+  is_executable: boolean;
+}
+
 export const AccountMetaSchema: Schema = {
   struct: {
     pubkey: PubkeySchema,

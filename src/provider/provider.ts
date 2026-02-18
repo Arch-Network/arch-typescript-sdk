@@ -1,9 +1,9 @@
-import { AccountInfoResult } from '../struct/account';
-import { Block } from '../struct/block';
+import { AccountInfoResult, AccountInfoWithPubkey } from '../struct/account';
+import { Block, FullBlock } from '../struct/block';
 import { BlockTransactionFilter } from '../struct/block-transaction-filter';
 import { BlockTransactionsParams } from '../struct/block-transactions-params';
 import { ProcessedTransaction } from '../struct/processed-transaction';
-import { ProgramAccount } from '../struct/program-account';
+import { ProgramAccount, AccountFilter } from '../struct/program-account';
 import { Pubkey } from '../struct/pubkey';
 import { RuntimeTransaction } from '../struct/runtime-transaction';
 import { TransactionListParams } from '../struct/transaction-list-params';
@@ -15,10 +15,18 @@ export interface Provider {
   readAccountInfo: (pubkey: Pubkey) => Promise<AccountInfoResult>;
   getAccountAddress: (pubkey: Pubkey) => Promise<string>;
   getBestBlockHash: () => Promise<string>;
+  getBestFinalizedBlockHash: () => Promise<string>;
   getBlock: (blockHash: string) => Promise<Block | undefined>;
+  getFullBlockByHash: (blockHash: string) => Promise<FullBlock | undefined>;
+  getFullBlockByHeight: (
+    blockHeight: number,
+  ) => Promise<FullBlock | undefined>;
   getBlockCount: () => Promise<number>;
   getBlockHash: (blockHeight: number) => Promise<string>;
-  getProgramAccounts: (programId: Pubkey) => Promise<ProgramAccount[]>;
+  getProgramAccounts: (
+    programId: Pubkey,
+    filters?: AccountFilter[],
+  ) => Promise<ProgramAccount[]>;
   getProcessedTransaction: (
     txid: string,
   ) => Promise<ProcessedTransaction | undefined>;
@@ -39,5 +47,7 @@ export interface Provider {
   ) => Promise<ProcessedTransaction[]>;
   getMultipleAccounts: (
     pubkeys: Pubkey[],
-  ) => Promise<(AccountInfoResult | null)[]>;
+  ) => Promise<(AccountInfoWithPubkey | null)[]>;
+  getNetworkPubkey: () => Promise<string>;
+  checkPreAnchorConflict: (accounts: Pubkey[]) => Promise<boolean>;
 }

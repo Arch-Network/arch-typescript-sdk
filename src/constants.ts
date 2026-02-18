@@ -1,28 +1,30 @@
 export enum Action {
-  // START_KEY_EXCHANGE = 'start_key_exchange',
-  // START_DKG = 'start_dkg',
-  // ASSIGN_AUTHORITY = 'assign_authority',
   READ_ACCOUNT_INFO = 'read_account_info',
-  // DEPLOY_PROGRAM = 'deploy_program',
   SEND_TRANSACTION = 'send_transaction',
   SEND_TRANSACTIONS = 'send_transactions',
   GET_BLOCK = 'get_block',
   GET_BLOCK_COUNT = 'get_block_count',
   GET_BLOCK_HASH = 'get_block_hash',
   GET_BEST_BLOCK_HASH = 'get_best_block_hash',
+  GET_BEST_FINALIZED_BLOCK_HASH = 'get_best_finalized_block_hash',
   GET_PROCESSED_TRANSACTION = 'get_processed_transaction',
   GET_ACCOUNT_ADDRESS = 'get_account_address',
   GET_PROGRAM_ACCOUNTS = 'get_program_accounts',
   REQUEST_AIRDROP = 'request_airdrop',
   CREATE_ACCOUNT_WITH_FAUCET = 'create_account_with_faucet',
   GET_BLOCK_BY_HEIGHT = 'get_block_by_height',
+  GET_FULL_BLOCK_WITH_TXIDS = 'GET_FULL_BLOCK_WITH_TXIDS',
   GET_TRANSACTIONS_BY_BLOCK = 'get_transactions_by_block',
   GET_TRANSACTIONS_BY_IDS = 'get_transactions_by_ids',
   RECENT_TRANSACTIONS = 'recent_transactions',
   GET_MULTIPLE_ACCOUNTS = 'get_multiple_accounts',
+  GET_NETWORK_PUBKEY = 'get_network_pubkey',
+  CHECK_PRE_ANCHOR_CONFLICT = 'check_pre_anchor_conflict',
 }
 
-export const RUNTIME_TX_SIZE_LIMIT = 1024; /** usize */
+export const RUNTIME_TX_SIZE_LIMIT = 10240; /** usize */
+
+export const MAX_TX_BATCH_SIZE = 100;
 
 // Uint8Array.from(Buffer.from("apl-token00000000000000000000000", "utf8"))
 export const TOKEN_PROGRAM_ID = new Uint8Array([
