@@ -1,9 +1,13 @@
-import { AccountInfoResult } from '../struct/account';
-import { Block } from '../struct/block';
+import { AccountInfoResult, AccountInfoWithPubkey } from '../struct/account';
+import { Block, FullBlock } from '../struct/block';
+import { BlockTransactionFilter } from '../struct/block-transaction-filter';
+import { BlockTransactionsParams } from '../struct/block-transactions-params';
 import { ProcessedTransaction } from '../struct/processed-transaction';
-import { ProgramAccount } from '../struct/program-account';
+import { ProgramAccount, AccountFilter } from '../struct/program-account';
 import { Pubkey } from '../struct/pubkey';
 import { RuntimeTransaction } from '../struct/runtime-transaction';
+import { TransactionListParams } from '../struct/transaction-list-params';
+import { TransactionsByIdsParams } from '../struct/transactions-by-ids-params';
 
 export interface Provider {
   sendTransaction: (transaction: RuntimeTransaction) => Promise<string>;
@@ -11,11 +15,39 @@ export interface Provider {
   readAccountInfo: (pubkey: Pubkey) => Promise<AccountInfoResult>;
   getAccountAddress: (pubkey: Pubkey) => Promise<string>;
   getBestBlockHash: () => Promise<string>;
+  getBestFinalizedBlockHash: () => Promise<string>;
   getBlock: (blockHash: string) => Promise<Block | undefined>;
+  getFullBlockByHash: (blockHash: string) => Promise<FullBlock | undefined>;
+  getFullBlockByHeight: (
+    blockHeight: number,
+  ) => Promise<FullBlock | undefined>;
   getBlockCount: () => Promise<number>;
   getBlockHash: (blockHeight: number) => Promise<string>;
-  getProgramAccounts: (programId: Pubkey) => Promise<ProgramAccount[]>;
-  getProcessedTransaction: (txid: string) => Promise<ProcessedTransaction | undefined>;
+  getProgramAccounts: (
+    programId: Pubkey,
+    filters?: AccountFilter[],
+  ) => Promise<ProgramAccount[]>;
+  getProcessedTransaction: (
+    txid: string,
+  ) => Promise<ProcessedTransaction | undefined>;
   requestAirdrop: (pubkey: Pubkey) => Promise<void>;
-  createAccountWithFaucet: (pubkey: Pubkey) => Promise<void>;
+  createAccountWithFaucet: (pubkey: Pubkey) => Promise<RuntimeTransaction>;
+  getBlockByHeight: (
+    blockHeight: number,
+    filter?: BlockTransactionFilter,
+  ) => Promise<Block | undefined>;
+  getTransactionsByBlock: (
+    params: BlockTransactionsParams,
+  ) => Promise<ProcessedTransaction[]>;
+  getTransactionsByIds: (
+    params: TransactionsByIdsParams,
+  ) => Promise<(ProcessedTransaction | null)[]>;
+  recentTransactions: (
+    params: TransactionListParams,
+  ) => Promise<ProcessedTransaction[]>;
+  getMultipleAccounts: (
+    pubkeys: Pubkey[],
+  ) => Promise<(AccountInfoWithPubkey | null)[]>;
+  getNetworkPubkey: () => Promise<string>;
+  checkPreAnchorConflict: (accounts: Pubkey[]) => Promise<boolean>;
 }

@@ -1,70 +1,120 @@
-import { Server } from 'socket.io';
+import { WebSocketServer, WebSocket } from 'ws';
 import http from 'http';
+import type { AddressInfo } from 'net';
 
-let io: Server | undefined;
+let wss: WebSocketServer | undefined;
 let httpServer: http.Server | undefined;
 let interval: NodeJS.Timeout | undefined;
 
-export async function startServer(port = 3001) {
+export async function startServer(port = 0): Promise<number> {
   httpServer = http.createServer();
-  io = new Server(httpServer, { cors: { origin: '*' } });
+  wss = new WebSocketServer({ server: httpServer });
 
-  io.on('connection', (socket) => {
-    console.log(`[SERVER] Client connected: ${socket.id}`);
+  wss.on('connection', (socket: WebSocket) => {
+    console.log(`[SERVER] Client connected`);
 
-    socket.on('subscribe', (data) => {
-      console.log(
-        `[SERVER] Subscribe from client ${socket.id} to topic: ${data.topic}`,
-      );
-      const subscriptionId = Math.random().toString(36).substring(2, 15);
-      socket.emit(`subscription_response_${data.request_id}`, {
-        status: 'Subscribed',
-        subscriptionId,
-        topic: data.topic,
-        request_id: data.request_id,
-      });
-    });
+    socket.on('message', (raw: WebSocket.RawData) => {
+      try {
+        const text = typeof raw === 'string' ? raw : raw.toString();
+        const msg = JSON.parse(text);
+        // Support both old { event, data } and new { method, params } envelopes
+        const isSubscribe =
+          msg?.event === 'subscribe' || msg?.method === 'subscribe';
+        const isUnsubscribe =
+          msg?.event === 'unsubscribe' || msg?.method === 'unsubscribe';
 
-    socket.on('unsubscribe', (data) => {
-      console.log(
-        `[SERVER] Unsubscribe from client ${socket.id} for subscriptionId: ${data.subscriptionId}`,
-      );
-      socket.emit(`unsubscribe_response_${data.subscriptionId}`, {
-        status: 'Unsubscribed',
-        subscriptionId: data.subscriptionId,
-        message: 'Unsubscribed successfully',
-      });
+        if (isSubscribe) {
+          const data = msg?.data || msg?.params || {};
+          const subscription_id = Math.random().toString(36).substring(2, 15);
+          const request_id = data.request_id;
+          const topic = data.topic;
+
+          // Respond using the SDK-expected event channel and snake_case fields
+          socket.send(
+            JSON.stringify({
+              event: `subscription_response_${request_id}`,
+              data: {
+                status: 'Subscribed',
+                subscription_id,
+                topic,
+                request_id,
+              },
+            }),
+          );
+        }
+
+        if (isUnsubscribe) {
+          const data = msg?.data || msg?.params || {};
+          const subscription_id = data.subscription_id || data.subscriptionId;
+
+          socket.send(
+            JSON.stringify({
+              event: `unsubscribe_response_${subscription_id}`,
+              data: {
+                status: 'Unsubscribed',
+                subscription_id,
+                message: 'Unsubscribed successfully',
+              },
+            }),
+          );
+        }
+      } catch (e) {
+        // ignore
+      }
     });
   });
 
   // Emit events every 5 seconds
   interval = setInterval(() => {
-    if (!io) return;
-    io.emit('block', { hash: randomHash(), timestamp: Date.now() });
-    io.emit('transaction', {
+    if (!wss) return;
+    const broadcast = (event: string, data: any) => {
+      for (const client of wss!.clients) {
+        if (client.readyState === WebSocket.OPEN) {
+          client.send(JSON.stringify({ event, data }));
+        }
+      }
+    };
+    broadcast('block', { hash: randomHash(), timestamp: Date.now() });
+    broadcast('transaction', {
       hash: randomHash(),
       status: 'Processed',
       programIds: ['program1'],
     });
-    io.emit('account_update', {
+    broadcast('account_update', {
       account: 'account1',
       transactionHash: randomHash(),
     });
-    io.emit('rolledback_transactions', { transactionHashes: [randomHash()] });
-    io.emit('reapplied_transactions', { transactionHashes: [randomHash()] });
-    io.emit('dkg', { status: 'active' });
+    broadcast('rolledback_transactions', { transactionHashes: [randomHash()] });
+    broadcast('reapplied_transactions', { transactionHashes: [randomHash()] });
+    broadcast('dkg', { status: 'active' });
   }, 5000);
 
   await new Promise<void>((resolve) => httpServer!.listen(port, resolve));
-  console.log(`[SERVER] Socket.IO mock server started on port ${port}`);
+  const address = httpServer!.address();
+  const actualPort = typeof address === 'object' && address
+    ? (address as AddressInfo).port
+    : port;
+  console.log(`[SERVER] WS mock server started on port ${actualPort}`);
+  return actualPort;
 }
 
 export async function stopServer() {
   if (interval) clearInterval(interval);
-  if (io) io.close();
+  if (wss) {
+    try {
+      // Terminate all client sockets to ensure a clean shutdown
+      for (const client of wss.clients) {
+        try {
+          client.terminate();
+        } catch {}
+      }
+    } catch {}
+    await new Promise<void>((resolve) => wss!.close(() => resolve()));
+    wss = undefined;
+  }
   if (httpServer)
     await new Promise<void>((resolve) => httpServer!.close(() => resolve()));
-  console.log('[SERVER] Socket.IO mock server stopped');
+  console.log('[SERVER] WS mock server stopped');
 }
 
 function randomHash(): string {

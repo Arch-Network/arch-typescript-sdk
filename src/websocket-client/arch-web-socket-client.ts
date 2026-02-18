@@ -1,4 +1,4 @@
-import { Socket } from 'socket.io-client';
+import { SocketLike } from './managers/socket-like';
 import {
   BackoffStrategy,
   DEFAULT_BACKOFF_STRATEGY,
@@ -21,7 +21,7 @@ export class ArchWebSocketClient {
   private reconnectionManager: ReconnectionManager;
   private options: WebSocketClientOptions;
   private autoReconnectHandler: (() => void) | undefined;
-  private socket: Socket | null = null;
+  private socket: SocketLike | null = null;
 
   constructor(options: WebSocketClientOptions) {
     this.options = {
@@ -34,6 +34,7 @@ export class ArchWebSocketClient {
       transports: options.transports ?? DEFAULT_OPTIONS.transports,
       forceNew: options.forceNew ?? DEFAULT_OPTIONS.forceNew,
       multiplex: options.multiplex ?? DEFAULT_OPTIONS.multiplex,
+      webSocketFactory: options.webSocketFactory ?? DEFAULT_OPTIONS.webSocketFactory,
     };
 
     this.connectionManager = new ConnectionManager(this.options);

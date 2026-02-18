@@ -3,12 +3,16 @@ import {
   SerializeUint8Array,
   serializeWithUint8Array,
 } from '../../serde/uint8array';
-import { AccountInfoResult } from '../../struct/account';
-import { Block } from '../../struct/block';
+import { AccountInfoResult, AccountInfoWithPubkey } from '../../struct/account';
+import { Block, FullBlock } from '../../struct/block';
+import { BlockTransactionFilter } from '../../struct/block-transaction-filter';
+import { BlockTransactionsParams } from '../../struct/block-transactions-params';
 import { ProcessedTransaction } from '../../struct/processed-transaction';
 import { AccountFilter, ProgramAccount } from '../../struct/program-account';
 import { Pubkey } from '../../struct/pubkey';
 import { RuntimeTransaction } from '../../struct/runtime-transaction';
+import { TransactionListParams } from '../../struct/transaction-list-params';
+import { TransactionsByIdsParams } from '../../struct/transactions-by-ids-params';
 import { Provider } from '../provider';
 import {
   AccountAddressResponse,
@@ -280,8 +284,6 @@ export class Maestro implements Provider {
     return deserializeWithUint8Array<ProcessedTransaction[]>(result.data);
   }
 
-
-
   /**
    * Gets the program accounts for a given program ID.
    * @param programId The program ID to fetch accounts for.
@@ -312,6 +314,59 @@ export class Maestro implements Provider {
     return deserializeWithUint8Array<ProgramAccount[]>(result.data);
   }
 
+  async getBlockByHeight(
+    blockHeight: number,
+    filter?: BlockTransactionFilter,
+  ): Promise<Block | undefined> {
+    throw new Error('Not implemented');
+  }
+
+  async getTransactionsByBlock(
+    params: BlockTransactionsParams,
+  ): Promise<ProcessedTransaction[]> {
+    throw new Error('Not implemented');
+  }
+
+  async getTransactionsByIds(
+    params: TransactionsByIdsParams,
+  ): Promise<(ProcessedTransaction | null)[]> {
+    throw new Error('Not implemented');
+  }
+
+  async recentTransactions(
+    params: TransactionListParams,
+  ): Promise<ProcessedTransaction[]> {
+    throw new Error('Not implemented');
+  }
+
+  async getMultipleAccounts(
+    pubkeys: Pubkey[],
+  ): Promise<(AccountInfoWithPubkey | null)[]> {
+    throw new Error('Not implemented');
+  }
+
+  async getBestFinalizedBlockHash(): Promise<string> {
+    throw new Error('Not implemented');
+  }
+
+  async getFullBlockByHash(blockHash: string): Promise<FullBlock | undefined> {
+    throw new Error('Not implemented');
+  }
+
+  async getFullBlockByHeight(
+    blockHeight: number,
+  ): Promise<FullBlock | undefined> {
+    throw new Error('Not implemented');
+  }
+
+  async getNetworkPubkey(): Promise<string> {
+    throw new Error('Not implemented');
+  }
+
+  async checkPreAnchorConflict(accounts: Pubkey[]): Promise<boolean> {
+    throw new Error('Not implemented');
+  }
+
   async requestAirdrop(pubkey: Pubkey) {
     // const response = await fetch(`${this.url}/rpc/airdrop/request`, {
     //   method: 'POST',
@@ -327,7 +382,7 @@ export class Maestro implements Provider {
     throw new Error('Not implemented');
   }
 
-  async createAccountWithFaucet(pubkey: Pubkey) {
+  async createAccountWithFaucet(pubkey: Pubkey): Promise<RuntimeTransaction> {
     // const response = await fetch(`${this.url}/rpc/account/faucet`, {
     //   method: 'POST',
     //   headers: this.commonHeaders(),

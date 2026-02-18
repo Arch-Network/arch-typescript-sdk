@@ -1,13 +1,10 @@
 import { Pubkey } from './pubkey';
 import { AccountInfoResult } from './account';
 
-export interface AccountFilter {
-  memcmp?: {
-    offset: number;
-    bytes: string; // hex-encoded bytes
-  };
-  dataSize?: number;
-}
+export type AccountFilter =
+  | { DataSize: number }
+  | { DataContent: { offset: number; bytes: Uint8Array } };
+
 export interface ProgramAccount {
   pubkey: Pubkey;
   account: AccountInfoResult;

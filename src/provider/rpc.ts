@@ -1,11 +1,15 @@
 import { Action } from '../constants';
-import { AccountInfoResult } from '../struct/account';
-import { Block } from '../struct/block';
+import { AccountInfoResult, AccountInfoWithPubkey } from '../struct/account';
+import { Block, FullBlock } from '../struct/block';
 import { ProcessedTransaction } from '../struct/processed-transaction';
 import { Pubkey } from '../struct/pubkey';
 import { RuntimeTransaction } from '../struct/runtime-transaction';
 import { ProgramAccount, AccountFilter } from '../struct/program-account';
 import { ArchRpcError, postData, processResult } from '../utils';
+import { BlockTransactionFilter } from '../struct/block-transaction-filter';
+import { BlockTransactionsParams } from '../struct/block-transactions-params';
+import { TransactionsByIdsParams } from '../struct/transactions-by-ids-params';
+import { TransactionListParams } from '../struct/transaction-list-params';
 
 import {
   deserializeWithUint8Array,
@@ -99,12 +103,25 @@ export class RpcConnection implements Provider {
   }
 
   /**
+   * Gets the best finalized block hash.
+   * @returns A promise that resolves with the best finalized block hash.
+   */
+  async getBestFinalizedBlockHash(): Promise<string> {
+    const result = await postData(
+      this.nodeUrl,
+      Action.GET_BEST_FINALIZED_BLOCK_HASH,
+    );
+
+    return processResult<string>(result);
+  }
+
+  /**
    * Gets block information for a given hash.
    * @param blockHash The block hash.
    * @returns A promise that resolves with the block information.
    */
   async getBlock(blockHash: string): Promise<Block | undefined> {
-    const result = await postData(this.nodeUrl, Action.GET_BLOCK, blockHash);
+    const result = await postData(this.nodeUrl, Action.GET_BLOCK, [blockHash]);
 
     try {
       return processResult<Block>(result);
@@ -115,6 +132,52 @@ export class RpcConnection implements Provider {
         }
       }
 
+      throw error;
+    }
+  }
+
+  /**
+   * Gets a full block by hash with complete transaction details.
+   * @param blockHash The block hash.
+   * @returns A promise that resolves with the full block or undefined if not found.
+   */
+  async getFullBlockByHash(
+    blockHash: string,
+  ): Promise<FullBlock | undefined> {
+    const params = [blockHash, BlockTransactionFilter.FULL];
+    const result = await postData(this.nodeUrl, Action.GET_BLOCK, params);
+
+    try {
+      return processResult<FullBlock>(result);
+    } catch (error: any) {
+      if (error instanceof ArchRpcError && error.error.code === NOT_FOUND) {
+        return undefined;
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Gets a full block by height with complete transaction details.
+   * @param blockHeight The block height.
+   * @returns A promise that resolves with the full block or undefined if not found.
+   */
+  async getFullBlockByHeight(
+    blockHeight: number,
+  ): Promise<FullBlock | undefined> {
+    const params = [blockHeight, BlockTransactionFilter.FULL];
+    const result = await postData(
+      this.nodeUrl,
+      Action.GET_BLOCK_BY_HEIGHT,
+      params,
+    );
+
+    try {
+      return processResult<FullBlock>(result);
+    } catch (error: any) {
+      if (error instanceof ArchRpcError && error.error.code === NOT_FOUND) {
+        return undefined;
+      }
       throw error;
     }
   }
@@ -211,15 +274,131 @@ export class RpcConnection implements Provider {
   /**
    * Creates an account with a faucet for a given public key.
    * @param pubkey The public key to create an account with a faucet for.
-   * @returns A promise that resolves with the account creation result.
+   * @returns A promise that resolves with the account creation transaction. You need to send this transaction to the network.
    */
-  async createAccountWithFaucet(pubkey: Pubkey) {
-    return processResult<void>(
+  async createAccountWithFaucet(pubkey: Pubkey): Promise<RuntimeTransaction> {
+    return processResult<RuntimeTransaction>(
       await postData(
         this.nodeUrl,
         Action.CREATE_ACCOUNT_WITH_FAUCET,
         serializeWithUint8Array(pubkey),
       ),
     );
+  }
+
+  /**
+   * Gets a block by its height.
+   * @param blockHeight The block height.
+   * @param filter Optional filter for block transactions.
+   * @returns A promise that resolves with the block or undefined if not found.
+   */
+  async getBlockByHeight(
+    blockHeight: number,
+    filter?: BlockTransactionFilter,
+  ): Promise<Block | undefined> {
+    try {
+      const params = filter ? [blockHeight, filter] : [blockHeight];
+      const blockData = await postData(
+        this.nodeUrl,
+        Action.GET_BLOCK_BY_HEIGHT,
+        params,
+      );
+      return processResult<Block>(blockData);
+    } catch (error: any) {
+      if (error instanceof ArchRpcError && error.error.code === NOT_FOUND) {
+        return undefined;
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Gets all transactions for a given block.
+   * @param params BlockTransactionsParams object.
+   * @returns A promise that resolves with an array of processed transactions.
+   */
+  async getTransactionsByBlock(
+    params: BlockTransactionsParams,
+  ): Promise<ProcessedTransaction[]> {
+    const result = await postData(
+      this.nodeUrl,
+      Action.GET_TRANSACTIONS_BY_BLOCK,
+      serializeWithUint8Array(params),
+    );
+    return processResult<ProcessedTransaction[]>(result);
+  }
+
+  /**
+   * Gets transactions by a list of transaction IDs.
+   * @param params TransactionsByIdsParams object.
+   * @returns A promise that resolves with an array of processed transactions or null for missing ones.
+   */
+  async getTransactionsByIds(
+    params: TransactionsByIdsParams,
+  ): Promise<(ProcessedTransaction | null)[]> {
+    const result = await postData(
+      this.nodeUrl,
+      Action.GET_TRANSACTIONS_BY_IDS,
+      params,
+    );
+    return processResult<(ProcessedTransaction | null)[]>(result);
+  }
+
+  /**
+   * Gets a list of recent transactions, with optional filtering.
+   * @param params TransactionListParams object.
+   * @returns A promise that resolves with an array of processed transactions.
+   */
+  async recentTransactions(
+    params: TransactionListParams,
+  ): Promise<ProcessedTransaction[]> {
+    const result = await postData(
+      this.nodeUrl,
+      Action.RECENT_TRANSACTIONS,
+      serializeWithUint8Array(params),
+    );
+    return processResult<ProcessedTransaction[]>(result);
+  }
+
+  /**
+   * Gets multiple accounts by their public keys.
+   * @param pubkeys Array of public keys.
+   * @returns A promise that resolves with an array of AccountInfoWithPubkey or null for missing accounts.
+   */
+  async getMultipleAccounts(
+    pubkeys: Pubkey[],
+  ): Promise<(AccountInfoWithPubkey | null)[]> {
+    const result = await postData(
+      this.nodeUrl,
+      Action.GET_MULTIPLE_ACCOUNTS,
+      serializeWithUint8Array(pubkeys),
+    );
+    return processResult<(AccountInfoWithPubkey | null)[]>(result);
+  }
+
+  /**
+   * Gets the network public key.
+   * @returns A promise that resolves with the network public key string.
+   */
+  async getNetworkPubkey(): Promise<string> {
+    const result = await postData(
+      this.nodeUrl,
+      Action.GET_NETWORK_PUBKEY,
+    );
+    return processResult<string>(result);
+  }
+
+  /**
+   * Checks for pre-anchor conflicts on a set of accounts.
+   * @param accounts Array of public keys to check for conflicts.
+   * @returns A promise that resolves with true if there is a conflict.
+   */
+  async checkPreAnchorConflict(accounts: Pubkey[]): Promise<boolean> {
+    const result = await postData(
+      this.nodeUrl,
+      Action.CHECK_PRE_ANCHOR_CONFLICT,
+      serializeWithUint8Array(accounts),
+    );
+    return processResult<boolean>(result);
   }
 }

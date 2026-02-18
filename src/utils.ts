@@ -18,7 +18,7 @@ export async function postData<T>(
     method: method,
   };
 
-  if (params) {
+  if (params !== undefined) {
     payload.params = params;
   }
 

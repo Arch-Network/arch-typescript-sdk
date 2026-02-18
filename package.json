@@ -1,6 +1,6 @@
 {
   "name": "@saturnbtcio/arch-sdk",
-  "version": "0.0.11",
+  "version": "0.0.24",
   "description": "Arch SDK",
   "author": "Saturn BTC",
   "main": "dist/index.js",
@@ -30,15 +30,18 @@
     "build": "tsup src/index.ts --format cjs,esm --dts",
     "deploy": "npm i && npm run build && npm publish",
     "lint": "tsc",
-    "test": "vitest"
+    "test": "vitest",
+    "test:rpc": "npx tsx test/rpc-harness.ts"
   },
   "license": "MIT",
   "devDependencies": {
     "@types/node": "^22.1.0",
+    "@types/ws": "^8.5.12",
     "prettier": "^3.3.3",
     "tsup": "^8.2.4",
     "typescript": "^5.5.4",
-    "vitest": "^2.0.5"
+    "vitest": "^2.0.5",
+    "ws": "^8.18.0"
   },
   "prettier": {
     "printWidth": 80,
@@ -58,9 +61,6 @@
     "@noble/curves": "^1.5.0",
     "@noble/hashes": "^1.4.0",
     "@scure/base": "^1.1.7",
-    "@types/socket.io": "^3.0.2",
-    "borsh": "^2.0.0",
-    "socket.io": "^4.8.1",
-    "socket.io-client": "^4.8.1"
+    "borsh": "^2.0.0"
   }
 }
