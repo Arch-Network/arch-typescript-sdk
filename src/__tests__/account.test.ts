@@ -9,7 +9,7 @@ describe('assert that account struct serializes as expected', () => {
     // instruction: new extend bytes instruction:
     const borshSerializedOutput = Uint8Array.from([
       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-      0, 0, 0, 0, 0, 0, 1, 1, 1,
+      0, 0, 0, 0, 0, 0, 0, 1, 1,
     ]);
 
     const testAccount: AccountMeta = {
