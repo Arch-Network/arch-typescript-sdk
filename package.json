@@ -1,6 +1,6 @@
 {
   "name": "@arch-network/arch-sdk",
-  "version": "0.0.25",
+  "version": "0.0.26",
   "description": "Arch SDK",
   "author": "Arch Network",
   "main": "dist/index.js",
