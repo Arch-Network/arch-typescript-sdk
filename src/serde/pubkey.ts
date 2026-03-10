@@ -24,7 +24,7 @@ export const toHex = (pubkey: Pubkey): string => {
 };
 
 export const isSystemProgram = (pubkey: Pubkey) => {
-  return pubkey === systemProgram();
+  return pubkey.every((byte) => byte === 0);
 };
 
 export const MAX_SEED_LENGTH = 32;
