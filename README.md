@@ -5,7 +5,7 @@ A TypeScript SDK for building, signing, and sending transactions on the Arch Net
 ## Installation
 
 ```bash
-npm install @saturnbtcio/arch-sdk
+npm install @arch-network/arch-sdk
 ```
 
 ## Quickstart Example
@@ -18,7 +18,7 @@ import {
   SanitizedMessageUtil,
   SignatureUtil,
   RpcConnection,
-} from '@saturnbtcio/arch-sdk';
+} from '@arch-network/arch-sdk';
 
 // 1. Set up a provider (e.g., RPC connection to an Arch node)
 const provider = new RpcConnection({ nodeUrl: 'http://localhost:8899' });
@@ -221,7 +221,7 @@ import {
   SignatureUtil,
   RpcConnection,
   // ...other imports
-} from '@saturnbtcio/arch-sdk';
+} from '@arch-network/arch-sdk';
 
 // Set up provider and arch connection
 const provider = new RpcConnection({ nodeUrl: 'http://localhost:8899' });
@@ -353,8 +353,8 @@ const client = new ArchWebSocketClient({
 ### Example Usage
 
 ```typescript
-import { ArchWebSocketClient } from '@saturnbtcio/arch-sdk';
-import { EventTopic } from '@saturnbtcio/arch-sdk/websocket-client/types/events';
+import { ArchWebSocketClient } from '@arch-network/arch-sdk';
+import { EventTopic } from '@arch-network/arch-sdk/websocket-client/types/events';
 
 const client = new ArchWebSocketClient({ url: 'ws://localhost:3001' });
 

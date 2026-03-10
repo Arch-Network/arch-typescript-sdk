@@ -2,7 +2,18 @@ export { RpcConnection } from './provider/rpc';
 export { Maestro } from './provider/maestro/maestro';
 export type { Arch } from './arch';
 export { ArchConnection } from './arch';
-export { Action, RUNTIME_TX_SIZE_LIMIT, MAX_TX_BATCH_SIZE } from './constants';
+export {
+  Action,
+  RUNTIME_TX_SIZE_LIMIT,
+  MAX_TX_BATCH_SIZE,
+  SYSTEM_PROGRAM_ID,
+  TOKEN_PROGRAM_ID,
+  ASSOCIATED_TOKEN_PROGRAM_ID,
+  BPF_LOADER_PROGRAM_ID,
+  VOTE_PROGRAM_ID,
+  STAKE_PROGRAM_ID,
+  COMPUTE_BUDGET_PROGRAM_ID,
+} from './constants';
 export type {
   AccountInfo,
   AccountMeta,
