@@ -2,7 +2,10 @@ import { AccountInfoResult, AccountInfoWithPubkey } from '../struct/account';
 import { Block, FullBlock } from '../struct/block';
 import { BlockTransactionFilter } from '../struct/block-transaction-filter';
 import { BlockTransactionsParams } from '../struct/block-transactions-params';
-import { ProcessedTransaction } from '../struct/processed-transaction';
+import {
+  ProcessedTransaction,
+  ProcessedTransactionStatus,
+} from '../struct/processed-transaction';
 import { ProgramAccount, AccountFilter } from '../struct/program-account';
 import { Pubkey } from '../struct/pubkey';
 import { RuntimeTransaction } from '../struct/runtime-transaction';
@@ -50,4 +53,7 @@ export interface Provider {
   ) => Promise<(AccountInfoWithPubkey | null)[]>;
   getNetworkPubkey: () => Promise<string>;
   checkPreAnchorConflict: (accounts: Pubkey[]) => Promise<boolean>;
+  getTransactionStatus: (
+    txids: string[],
+  ) => Promise<(ProcessedTransactionStatus | null)[]>;
 }

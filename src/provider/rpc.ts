@@ -1,7 +1,10 @@
 import { Action } from '../constants';
 import { AccountInfoResult, AccountInfoWithPubkey } from '../struct/account';
 import { Block, FullBlock } from '../struct/block';
-import { ProcessedTransaction } from '../struct/processed-transaction';
+import {
+  ProcessedTransaction,
+  ProcessedTransactionStatus,
+} from '../struct/processed-transaction';
 import { Pubkey } from '../struct/pubkey';
 import { RuntimeTransaction } from '../struct/runtime-transaction';
 import { ProgramAccount, AccountFilter } from '../struct/program-account';
@@ -400,5 +403,17 @@ export class RpcConnection implements Provider {
       serializeWithUint8Array(accounts),
     );
     return processResult<boolean>(result);
+  }
+
+  /**
+   * Gets status for a list of transaction IDs (queued, processed, failed, or null).
+   * Maximum 100 IDs per request.
+   */
+  async getTransactionStatus(
+    txids: string[],
+  ): Promise<(ProcessedTransactionStatus | null)[]> {
+    return processResult<(ProcessedTransactionStatus | null)[]>(
+      await postData(this.nodeUrl, Action.GET_TRANSACTION_STATUS, { txids }),
+    );
   }
 }

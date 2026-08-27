@@ -7,7 +7,10 @@ import { AccountInfoResult, AccountInfoWithPubkey } from '../../struct/account';
 import { Block, FullBlock } from '../../struct/block';
 import { BlockTransactionFilter } from '../../struct/block-transaction-filter';
 import { BlockTransactionsParams } from '../../struct/block-transactions-params';
-import { ProcessedTransaction } from '../../struct/processed-transaction';
+import {
+  ProcessedTransaction,
+  ProcessedTransactionStatus,
+} from '../../struct/processed-transaction';
 import { AccountFilter, ProgramAccount } from '../../struct/program-account';
 import { Pubkey } from '../../struct/pubkey';
 import { RuntimeTransaction } from '../../struct/runtime-transaction';
@@ -364,6 +367,12 @@ export class Maestro implements Provider {
   }
 
   async checkPreAnchorConflict(accounts: Pubkey[]): Promise<boolean> {
+    throw new Error('Not implemented');
+  }
+
+  async getTransactionStatus(
+    _txids: string[],
+  ): Promise<(ProcessedTransactionStatus | null)[]> {
     throw new Error('Not implemented');
   }
 

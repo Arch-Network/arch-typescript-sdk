@@ -13,18 +13,29 @@ export enum Action {
   REQUEST_AIRDROP = 'request_airdrop',
   CREATE_ACCOUNT_WITH_FAUCET = 'create_account_with_faucet',
   GET_BLOCK_BY_HEIGHT = 'get_block_by_height',
-  GET_FULL_BLOCK_WITH_TXIDS = 'GET_FULL_BLOCK_WITH_TXIDS',
+  GET_FULL_BLOCK_WITH_TXIDS = 'get_full_block_with_txids',
   GET_TRANSACTIONS_BY_BLOCK = 'get_transactions_by_block',
   GET_TRANSACTIONS_BY_IDS = 'get_transactions_by_ids',
   RECENT_TRANSACTIONS = 'recent_transactions',
   GET_MULTIPLE_ACCOUNTS = 'get_multiple_accounts',
   GET_NETWORK_PUBKEY = 'get_network_pubkey',
   CHECK_PRE_ANCHOR_CONFLICT = 'check_pre_anchor_conflict',
+  GET_TRANSACTION_STATUS = 'get_transaction_status',
 }
 
-export const RUNTIME_TX_SIZE_LIMIT = 10240; /** usize */
+/** Serialized RuntimeTransaction size limit (Solana PACKET_DATA_SIZE). */
+export const RUNTIME_TX_SIZE_LIMIT = 1232;
+
+/** The only RuntimeTransaction.version accepted by the network. */
+export const RUNTIME_TX_VERSION = 0;
+
+export const ALLOWED_RUNTIME_TX_VERSIONS = [RUNTIME_TX_VERSION] as const;
 
 export const MAX_TX_BATCH_SIZE = 100;
+
+export const MAX_SIGNERS = 16;
+
+export const MAX_TRANSACTIONS_PER_BLOCK = 1024;
 
 // base58: "TokenT4em53UrV4gSvZ3nCS2mZeHaqTLapwt6iZt6Mk"
 export const TOKEN_PROGRAM_ID = new Uint8Array([
@@ -63,4 +74,10 @@ export const STAKE_PROGRAM_ID = new Uint8Array([
 export const COMPUTE_BUDGET_PROGRAM_ID = new Uint8Array([
   3, 6, 70, 111, 229, 33, 23, 50, 255, 236, 173, 186, 114, 195, 155, 231, 188,
   140, 229, 187, 197, 247, 18, 107, 44, 67, 155, 58, 64, 0, 0, 0,
+]);
+
+// base58: "NativeLoader1111111111111111111111111111111"
+export const NATIVE_LOADER_PROGRAM_ID = new Uint8Array([
+  5, 135, 132, 191, 20, 139, 164, 40, 47, 176, 18, 87, 72, 136, 169, 241, 83,
+  160, 125, 173, 247, 101, 192, 69, 92, 154, 151, 3, 128, 0, 0, 0,
 ]);

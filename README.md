@@ -51,7 +51,7 @@ const adjustedSignature = SignatureUtil.adjustSignature(signature);
 
 // 6. Build the transaction object
 const transaction = {
-  version: 1,
+  version: 0,
   signatures: [adjustedSignature],
   message,
 };
@@ -256,7 +256,7 @@ const signature = bip322Sign(privateKey, messageHash, addressType); // pseudocod
 const adjustedSignature = SignatureUtil.adjustSignature(signature);
 
 const transaction = {
-  version: 1,
+  version: 0,
   signatures: [adjustedSignature],
   message,
 };

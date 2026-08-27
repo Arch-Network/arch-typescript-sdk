@@ -5,7 +5,11 @@ export { ArchConnection } from './arch';
 export {
   Action,
   RUNTIME_TX_SIZE_LIMIT,
+  RUNTIME_TX_VERSION,
+  ALLOWED_RUNTIME_TX_VERSIONS,
   MAX_TX_BATCH_SIZE,
+  MAX_SIGNERS,
+  MAX_TRANSACTIONS_PER_BLOCK,
   SYSTEM_PROGRAM_ID,
   TOKEN_PROGRAM_ID,
   ASSOCIATED_TOKEN_PROGRAM_ID,
@@ -13,6 +17,7 @@ export {
   VOTE_PROGRAM_ID,
   STAKE_PROGRAM_ID,
   COMPUTE_BUDGET_PROGRAM_ID,
+  NATIVE_LOADER_PROGRAM_ID,
 } from './constants';
 export type {
   AccountInfo,
@@ -59,6 +64,7 @@ export { ArchRpcError } from './utils';
 
 export * as SystemInstruction from './system-instructions/system-instructions';
 export * as ComputeBudget from './system-instructions/compute-budget';
+export * as LoaderInstruction from './system-instructions/loader-instructions';
 export { minimumRent, isExempt } from './rent/rent';
 
 export type { AccountFilter, ProgramAccount } from './struct/program-account';

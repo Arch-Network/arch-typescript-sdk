@@ -316,6 +316,26 @@ async function main() {
     },
   );
 
+  await runTest(
+    'getTransactionStatus',
+    async () => {
+      assert(!!txIdToQuery, 'Need a txid (set TEST_TXID or ensure blocks have txs)');
+      const statuses = await rpc.getTransactionStatus([txIdToQuery!]);
+      assert(Array.isArray(statuses), 'should return an array');
+      assert(statuses.length === 1, 'should return 1 status');
+      const status = statuses[0];
+      assert(status !== null && status !== undefined, 'status should not be null');
+      assert(
+        status!.type === 'queued' ||
+          status!.type === 'processed' ||
+          status!.type === 'failed',
+        `status.type should be queued|processed|failed, got: ${status!.type}`,
+      );
+      log('transactionStatus', status);
+    },
+    !txIdToQuery,
+  );
+
   // ─── Account Tests ─────────────────────────────────────────────────
 
   console.log('\n── Accounts ────────────────────────────────────────────');
