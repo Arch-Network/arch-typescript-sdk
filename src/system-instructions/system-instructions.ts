@@ -6,19 +6,22 @@ import { SYSTEM_PROGRAM_ID } from '../constants';
 /**
  * Enum discriminant values must match the order in the Rust
  * `SystemInstruction` enum (arch-network program/src/system_instruction.rs).
+ *
+ * Post v0.12 / chain-reset (#2708): `CreateAccountWithAnchor` and `Anchor`
+ * were removed, shifting every later discriminant down by two. Transfer is
+ * now 3 (was 5). Encoding the old values makes the on-chain program try to
+ * deserialize CreateAccountWithSeed and fail with "Attempting to read 32 bytes".
  */
 export enum SystemInstruction {
   CreateAccount = 0,
-  CreateAccountWithAnchor = 1,
-  Assign = 2,
-  Anchor = 3,
-  SignInput = 4,
-  Transfer = 5,
-  Allocate = 6,
-  CreateAccountWithSeed = 7,
-  AllocateWithSeed = 8,
-  AssignWithSeed = 9,
-  TransferWithSeed = 10,
+  Assign = 1,
+  SignInput = 2,
+  Transfer = 3,
+  Allocate = 4,
+  CreateAccountWithSeed = 5,
+  AllocateWithSeed = 6,
+  AssignWithSeed = 7,
+  TransferWithSeed = 8,
 }
 
 export const u32ToLeBytes = (num: number): Uint8Array => {
@@ -50,6 +53,11 @@ const encodeString = (str: string): Uint8Array => {
   return result;
 };
 
+const anchoringRemovedError = () =>
+  new Error(
+    'SystemInstruction CreateAccountWithAnchor / Anchor were removed in arch-network v0.12 (chain reset). Accounts are no longer anchored to Bitcoin UTXOs.',
+  );
+
 export const createAccount = (
   fromPubkey: Pubkey,
   toPubkey: Pubkey,
@@ -80,45 +88,17 @@ export const createAccount = (
   };
 };
 
+/** @deprecated Removed in arch-network v0.12 — always throws. */
 export const createAccountWithAnchor = (
-  fromPubkey: Pubkey,
-  toPubkey: Pubkey,
-  lamports: bigint,
-  space: bigint,
-  owner: Pubkey,
-  txid: string,
-  vout: number,
+  _fromPubkey: Pubkey,
+  _toPubkey: Pubkey,
+  _lamports: bigint,
+  _space: bigint,
+  _owner: Pubkey,
+  _txid: string,
+  _vout: number,
 ): Instruction => {
-  const txidBytes = hexStringToUint8Array(txid);
-  if (txidBytes.length !== 32) {
-    throw new Error('txid must be 32 bytes');
-  }
-
-  const discriminant = u32ToLeBytes(SystemInstruction.CreateAccountWithAnchor);
-  const lamportsArray = u64ToLeBytes(lamports);
-  const spaceArray = u64ToLeBytes(space);
-  const ownerBytes = owner;
-  const voutArray = u32ToLeBytes(vout);
-
-  const data = new Uint8Array([
-    ...discriminant,
-    ...lamportsArray,
-    ...spaceArray,
-    ...ownerBytes,
-    ...txidBytes,
-    ...voutArray,
-  ]);
-
-  const accounts: AccountMeta[] = [
-    { pubkey: fromPubkey, is_signer: true, is_writable: true },
-    { pubkey: toPubkey, is_signer: true, is_writable: true },
-  ];
-
-  return {
-    program_id: SYSTEM_PROGRAM_ID,
-    accounts,
-    data,
-  };
+  throw anchoringRemovedError();
 };
 
 export const assign = (pubkey: Pubkey, owner: Pubkey): Instruction => {
@@ -137,25 +117,13 @@ export const assign = (pubkey: Pubkey, owner: Pubkey): Instruction => {
   };
 };
 
+/** @deprecated Removed in arch-network v0.12 — always throws. */
 export const anchor = (
-  pubkey: Pubkey,
-  txid: string,
-  vout: number,
+  _pubkey: Pubkey,
+  _txid: string,
+  _vout: number,
 ): Instruction => {
-  const discriminant = u32ToLeBytes(SystemInstruction.Anchor);
-  const txidBytes = hexStringToUint8Array(txid);
-  const voutArray = u32ToLeBytes(vout);
-  const data = new Uint8Array([...discriminant, ...txidBytes, ...voutArray]);
-
-  const accounts: AccountMeta[] = [
-    { pubkey, is_signer: true, is_writable: true },
-  ];
-
-  return {
-    program_id: SYSTEM_PROGRAM_ID,
-    accounts,
-    data,
-  };
+  throw anchoringRemovedError();
 };
 
 export const signInput = (index: number, signer: Pubkey): Instruction => {
