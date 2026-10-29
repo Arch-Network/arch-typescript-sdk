@@ -3,6 +3,7 @@ import { ASSOCIATED_TOKEN_PROGRAM_ID } from '../constants';
 import { TOKEN_PROGRAM_ID } from '../constants';
 import { Pubkey } from '../struct/pubkey';
 import { sha256 } from '@noble/hashes/sha256';
+import { bytesToHex } from '../codec/bytes';
 
 export const systemProgram = () => {
   return new Uint8Array(32) as Pubkey;
@@ -20,7 +21,7 @@ export const fromHex = (hex: string) => {
 };
 
 export const toHex = (pubkey: Pubkey): string => {
-  return Buffer.from(pubkey).toString('hex');
+  return bytesToHex(pubkey);
 };
 
 export const isSystemProgram = (pubkey: Pubkey) => {
@@ -69,7 +70,7 @@ export function getAssociatedTokenAddress(
  * @throws Error if no valid program address is found or if max seeds are exceeded
  */
 export function findProgramAddress(
-  seeds: Array<Buffer | Uint8Array>,
+  seeds: ReadonlyArray<Uint8Array>,
   programId: Pubkey,
 ): [Pubkey, number] {
   if (seeds.length > MAX_SEEDS) {
@@ -80,7 +81,7 @@ export function findProgramAddress(
   let address;
   while (nonce !== 0) {
     try {
-      const seedsWithNonce = seeds.concat(Buffer.from([nonce]));
+      const seedsWithNonce = seeds.concat(Uint8Array.of(nonce));
       address = createProgramAddress(seedsWithNonce, programId);
       return [address, nonce];
     } catch (err) {
@@ -110,7 +111,7 @@ export function findProgramAddress(
  * @throws Error if seeds exceed max length or if resulting address is on the curve
  */
 function createProgramAddress(
-  seeds: Array<Buffer | Uint8Array>,
+  seeds: ReadonlyArray<Uint8Array>,
   programId: Pubkey,
 ): Pubkey {
   // Validate seeds length
@@ -118,19 +119,24 @@ function createProgramAddress(
     throw new Error(`Max seeds exceeded: ${seeds.length} > ${MAX_SEEDS}`);
   }
 
-  // Concatenate everything into a single buffer
-  let buffer = Buffer.alloc(0);
+  let length = programId.length;
   for (const seed of seeds) {
     if (seed.length > MAX_SEED_LENGTH) {
       throw new Error(
         `Max seed length exceeded: ${seed.length} > ${MAX_SEED_LENGTH}`,
       );
     }
-    buffer = Buffer.concat([buffer, Buffer.from(seed)]);
+    length += seed.length;
   }
 
-  // Add program id to the buffer
-  buffer = Buffer.concat([buffer, Buffer.from(programId)]);
+  // seeds || program id, without a global Buffer so it runs in browsers and workers
+  const buffer = new Uint8Array(length);
+  let offset = 0;
+  for (const seed of seeds) {
+    buffer.set(seed, offset);
+    offset += seed.length;
+  }
+  buffer.set(programId, offset);
 
   // Calculate SHA256 hash
   const hash = sha256(buffer);

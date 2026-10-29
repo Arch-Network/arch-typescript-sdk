@@ -74,6 +74,62 @@ export type { TransactionListParams } from './struct/transaction-list-params';
 export { BlockTransactionFilter } from './struct/block-transaction-filter';
 export type { Provider } from './provider/provider';
 
+// program SDK helpers
+export { DomainError, InvalidArgumentError } from './errors';
+export {
+  hexToBytes,
+  bytesToHex,
+  bytesEqual,
+  toByteArray,
+  decodeBase64,
+  asciiOf,
+  isHex,
+  bytesToBase58,
+  base58ToBytes,
+  asciiBytes,
+} from './codec/bytes';
+export {
+  encodeU16LE,
+  encodeU32LE,
+  encodeU64LE,
+  encodeU128LE,
+  encodeI32LE,
+  encodeI64LE,
+  encodeI128LE,
+  decodeU16LE,
+  decodeU32LE,
+  decodeU64LE,
+  decodeU128LE,
+  decodeI32LE,
+  decodeI64LE,
+  decodeI128LE,
+  decodeBool,
+  decodePubkey,
+} from './codec/borsh';
+export type {
+  DecodedProgramError,
+  ProgramErrorTable,
+  ProgramErrorTables,
+  IdlErrorEntry,
+  ProgramErrorSource,
+} from './program-error';
+export { programErrorTable, decodeProgramError } from './program-error';
+export type { AplMint, AplTokenAccount } from './token/apl';
+export {
+  APL_MINT_SIZE,
+  APL_TOKEN_ACCOUNT_SIZE,
+  MalformedAplAccountError,
+  decodeAplMint,
+  decodeAplTokenAccount,
+} from './token/apl';
+export {
+  associatedTokenAddress,
+  createAssociatedTokenAccountInstruction,
+  ensureAssociatedTokenAccountInstruction,
+  tokenTransferInstruction,
+} from './token/instructions';
+export { transactionId } from './txid';
+
 // websocket
 export { ArchWebSocketClient } from './websocket-client/arch-web-socket-client';
 export type { WebSocketClientOptions } from './websocket-client/config/web-socket-config';

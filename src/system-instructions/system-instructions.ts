@@ -2,6 +2,7 @@ import { Instruction } from '../struct/instruction';
 import { AccountMeta } from '../struct/account';
 import { Pubkey } from '../struct/pubkey';
 import { SYSTEM_PROGRAM_ID } from '../constants';
+import { encodeU64LE } from '../codec/borsh';
 
 /**
  * Enum discriminant values must match the order in the Rust
@@ -148,7 +149,8 @@ export const transfer = (
   lamports: bigint,
 ): Instruction => {
   const discriminant = u32ToLeBytes(SystemInstruction.Transfer);
-  const lamportsBytes = u64ToLeBytes(lamports);
+  // Range-checked: a masked 2^64 would transfer 0, a negative amount u64::MAX.
+  const lamportsBytes = encodeU64LE(lamports);
   const data = new Uint8Array([...discriminant, ...lamportsBytes]);
 
   const accounts: AccountMeta[] = [
