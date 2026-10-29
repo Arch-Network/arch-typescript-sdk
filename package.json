@@ -39,9 +39,9 @@
   "scripts": {
     "build": "tsup src/index.ts --format cjs,esm --dts",
     "prepublishOnly": "npm run build",
-    "deploy": "npm i && npm run build && npm publish",
     "lint": "tsc",
     "test": "vitest",
+    "test:unit": "vitest run --exclude '**/node_modules/**' --exclude '**/*.integration.test.ts'",
     "test:rpc": "npx tsx test/rpc-harness.ts"
   },
   "license": "MIT",
