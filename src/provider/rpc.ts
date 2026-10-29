@@ -251,11 +251,13 @@ export class RpcConnection implements Provider {
   ): Promise<ProgramAccount[]> {
     const result = await postData(this.nodeUrl, Action.GET_PROGRAM_ACCOUNTS, [
       serializeWithUint8Array(programId),
-      filters,
+      filters === undefined ? undefined : serializeWithUint8Array(filters),
     ]);
 
     const response =
       processResult<SerializeUint8Array<ProgramAccount[]>>(result);
+    // deserializeWithUint8Array reads an empty array as empty bytes.
+    if (Array.isArray(response) && response.length === 0) return [];
     return deserializeWithUint8Array<ProgramAccount[]>(response);
   }
 
