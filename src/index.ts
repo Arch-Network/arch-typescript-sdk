@@ -18,6 +18,11 @@ export {
   STAKE_PROGRAM_ID,
   COMPUTE_BUDGET_PROGRAM_ID,
   NATIVE_LOADER_PROGRAM_ID,
+  BASE_FEE_LAMPORTS_PER_SIGNATURE,
+  NATIVE_DECIMALS,
+  SIGNATURE_VALIDITY_BLOCKS,
+  TRANSACTION_ALREADY_IN_POOL,
+  FEE_PAYER_REJECTED,
 } from './constants';
 export type {
   AccountInfo,
@@ -31,15 +36,25 @@ export type { Instruction } from './struct/instruction';
 export { InstructionSchema } from './struct/instruction';
 export type { Message } from './struct/message';
 export { MessageSchema } from './struct/message';
-export type { SanitizedMessage } from './struct/sanitized-message';
+export type {
+  SanitizedMessage,
+  ReadonlySanitizedMessage,
+} from './struct/sanitized-message';
 export { SanitizedMessageSchema } from './struct/sanitized-message';
-export type { SanitizedInstruction } from './struct/sanitized-instruction';
+export type {
+  SanitizedInstruction,
+  ReadonlySanitizedInstruction,
+} from './struct/sanitized-instruction';
 export { SanitizedInstructionSchema } from './struct/sanitized-instruction';
 export type { MessageHeader } from './struct/header';
 export { MessageHeaderSchema } from './struct/header';
 export type { Pubkey } from './struct/pubkey';
 export { PubkeySchema } from './struct/pubkey';
-export type { RuntimeTransaction, Signature } from './struct/runtime-transaction';
+export type {
+  RuntimeTransaction,
+  ReadonlyRuntimeTransaction,
+  Signature,
+} from './struct/runtime-transaction';
 export type { UtxoMeta, UtxoMetaData } from './struct/utxo';
 export { UtxoMetaSchema } from './struct/utxo';
 export type { Block, FullBlock } from './struct/block';
@@ -67,7 +82,11 @@ export * as ComputeBudget from './system-instructions/compute-budget';
 export * as LoaderInstruction from './system-instructions/loader-instructions';
 export { minimumRent, isExempt } from './rent/rent';
 
-export type { AccountFilter, ProgramAccount } from './struct/program-account';
+export type {
+  AccountFilter,
+  ProgramAccountFilter,
+  ProgramAccount,
+} from './struct/program-account';
 export type { BlockTransactionsParams } from './struct/block-transactions-params';
 export type { TransactionsByIdsParams } from './struct/transactions-by-ids-params';
 export type { TransactionListParams } from './struct/transaction-list-params';
@@ -122,13 +141,25 @@ export {
   decodeAplMint,
   decodeAplTokenAccount,
 } from './token/apl';
+export type {
+  AccountExistenceReader,
+  MissingAtaInput,
+} from './token/instructions';
 export {
   associatedTokenAddress,
   createAssociatedTokenAccountInstruction,
   ensureAssociatedTokenAccountInstruction,
+  missingAtaInstructions,
   tokenTransferInstruction,
 } from './token/instructions';
 export { transactionId } from './txid';
+export type { ChallengeSigner, EphemeralSigner } from './bip322';
+export {
+  taprootOutputKey,
+  bip322Sighash,
+  bip322ChallengeSighash,
+  ephemeralSigner,
+} from './bip322';
 
 // websocket
 export { ArchWebSocketClient } from './websocket-client/arch-web-socket-client';

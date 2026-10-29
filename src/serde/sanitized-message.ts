@@ -1,14 +1,17 @@
 import { sha256 } from '@noble/hashes/sha256';
 import { serialize as serializeInstruction } from './sanitized-instruction';
 import { hex } from '@scure/base';
-import { SanitizedMessage } from '../struct/sanitized-message';
+import {
+  ReadonlySanitizedMessage,
+  SanitizedMessage,
+} from '../struct/sanitized-message';
 import { MessageHeader } from '../struct/header';
 import { Pubkey, SanitizedInstruction, SanitizedInstructionUtil } from '..';
 import { Instruction } from '../struct/instruction';
 import { AccountMeta } from '../struct/account';
 import { CompiledKeys, CompileError } from '../struct/compiled-keys';
 
-const serializeMessageHeader = (header: MessageHeader) => {
+const serializeMessageHeader = (header: Readonly<MessageHeader>) => {
   return new Uint8Array([
     header.num_required_signatures,
     header.num_readonly_signed_accounts,
@@ -16,7 +19,7 @@ const serializeMessageHeader = (header: MessageHeader) => {
   ]);
 };
 
-export const serialize = (message: SanitizedMessage) => {
+export const serialize = (message: ReadonlySanitizedMessage) => {
   const serializedHeader = serializeMessageHeader(message.header);
 
   const accountKeyBuffer = new ArrayBuffer(4);
@@ -49,7 +52,7 @@ export const serialize = (message: SanitizedMessage) => {
   ]);
 };
 
-export const hash = (message: SanitizedMessage) => {
+export const hash = (message: ReadonlySanitizedMessage) => {
   const serializedData = serialize(message);
   const firstHash = sha256(serializedData);
   const hexString = hex.encode(firstHash);

@@ -73,3 +73,42 @@ export function tokenTransferInstruction(
     data,
   };
 }
+
+/**
+ * Whether an account exists. Answer `false` for the upstream's not-found response and let any other failure throw: a
+ * wrong guess either omits a required `Create` (`AccountNotInitialized`) or emits one a non-idempotent program rejects.
+ */
+export interface AccountExistenceReader {
+  accountExists(pubkey: Pubkey): Promise<boolean>;
+}
+
+export interface MissingAtaInput {
+  readonly owner: Pubkey;
+  readonly mints: readonly Pubkey[];
+  /** Who funds the accounts. Defaults to the owner; a transfer to someone else's address pays for theirs, and they sign nothing. */
+  readonly payer?: Pubkey;
+  /** The network's associated-token program semantics (deployment data): an idempotent `Create` is its own existence check; otherwise each ATA is probed first. */
+  readonly ataCreateIsIdempotent: boolean;
+}
+
+/** `Create` instructions to prepend for the owner's ATAs of `mints`, in input order; `reader` is consulted only when `Create` is not idempotent. */
+export async function missingAtaInstructions(
+  reader: AccountExistenceReader,
+  input: MissingAtaInput,
+): Promise<Instruction[]> {
+  const { owner, mints, ataCreateIsIdempotent } = input;
+  const payer = input.payer ?? owner;
+  const atas = mints.map((mint) => associatedTokenAddress(owner, mint));
+  const create = (i: number): Instruction =>
+    createAssociatedTokenAccountInstruction({
+      payer,
+      ata: atas[i]!,
+      owner,
+      mint: mints[i]!,
+    });
+  if (ataCreateIsIdempotent) return mints.map((_, i) => create(i));
+  const exists = await Promise.all(
+    atas.map((ata) => reader.accountExists(ata)),
+  );
+  return mints.flatMap((_, i) => (exists[i] === true ? [] : [create(i)]));
+}

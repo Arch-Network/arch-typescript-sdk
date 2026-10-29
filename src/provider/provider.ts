@@ -6,7 +6,11 @@ import {
   ProcessedTransaction,
   ProcessedTransactionStatus,
 } from '../struct/processed-transaction';
-import { ProgramAccount, AccountFilter } from '../struct/program-account';
+import {
+  ProgramAccount,
+  AccountFilter,
+  ProgramAccountFilter,
+} from '../struct/program-account';
 import { Pubkey } from '../struct/pubkey';
 import { RuntimeTransaction } from '../struct/runtime-transaction';
 import { TransactionListParams } from '../struct/transaction-list-params';
@@ -28,7 +32,7 @@ export interface Provider {
   getBlockHash: (blockHeight: number) => Promise<string>;
   getProgramAccounts: (
     programId: Pubkey,
-    filters?: AccountFilter[],
+    filters?: ReadonlyArray<AccountFilter | ProgramAccountFilter>,
   ) => Promise<ProgramAccount[]>;
   getProcessedTransaction: (
     txid: string,

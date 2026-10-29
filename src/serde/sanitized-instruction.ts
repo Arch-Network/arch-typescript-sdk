@@ -1,7 +1,12 @@
 import { hex } from '@scure/base';
-import { SanitizedInstruction } from '../struct/sanitized-instruction';
+import {
+  ReadonlySanitizedInstruction,
+  SanitizedInstruction,
+} from '../struct/sanitized-instruction';
 
-export const serialize = (instruction: SanitizedInstruction): Uint8Array => {
+export const serialize = (
+  instruction: ReadonlySanitizedInstruction,
+): Uint8Array => {
   const serializedProgramId = instruction.program_id_index;
 
   const accountsCountBuffer = new ArrayBuffer(4);
