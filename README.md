@@ -249,10 +249,31 @@ decodeProgramError(processed ?? null, tables); // { code, name, message? } | nul
 - `associatedTokenAddress(owner, mint)` — `PubkeyUtil.getAssociatedTokenAddress` with off-curve owners allowed.
 - `createAssociatedTokenAccountInstruction({ payer, ata, owner, mint })` — the associated-token program's `Create` (data `[1]`); `ensureAssociatedTokenAccountInstruction(owner, mint)` is the self-funded form.
 - `tokenTransferInstruction(source, destination, owner, amount)` — the token program's `Transfer` (opcode 3).
+- `missingAtaInstructions(reader, { owner, mints, payer?, ataCreateIsIdempotent })` — the `Create`s to prepend for the owner's ATAs of `mints`, in order. With an idempotent `Create` every ATA gets one and `reader` is not called; otherwise `reader.accountExists(ata)` is asked per ATA and only absent ones are created. `reader` maps the upstream's not-found answer to `false` and throws on anything else.
+
+### Program account filters
+
+`ProgramAccountFilter` is a `get_program_accounts` filter in wire form (`{ DataSize }` or `{ DataContent: { offset, bytes: number[] } }`). `getProgramAccounts` accepts it alongside `AccountFilter` (whose `Uint8Array` bytes it converts to the same form), so program SDKs can export filter builders without `Uint8Array`s.
 
 ### Transaction id
 
-- `transactionId(tx: RuntimeTransaction): string` — the id the validator issues for a signed transaction: `hex(sha256(hex(sha256(serialize(tx)))))`.
+- `transactionId(tx: ReadonlyRuntimeTransaction): string` — the id the validator issues for a signed transaction: `hex(sha256(hex(sha256(serialize(tx)))))`. Takes a `RuntimeTransaction` or any read-only/frozen equivalent; `TransactionUtil.serialize` does too.
+
+### BIP-322 signing
+
+The validator verifies each required signature as a BIP-322 "simple" proof over the message hash's 64 ASCII characters, for the P2TR address of the signer's x-only key (no script tree), with a 64-byte witness read as SIGHASH_DEFAULT.
+
+- `taprootOutputKey(internalKey)` — the BIP-341 output key `lift_x(P) + hash_TapTweak(P)·G`.
+- `bip322Sighash(outputKey, message, hashType = 0)` — the BIP-341 key-path sighash of BIP-322's `to_sign` (0 = SIGHASH_DEFAULT, 1 = SIGHASH_ALL).
+- `bip322ChallengeSighash(publicKeyHex, challenge)` — the hex sighash a raw-payload signer (no hashing) signs for a challenge, from an x-only or compressed key.
+- `ephemeralSigner()` — a fresh key from `crypto.getRandomValues` as `{ pubkey, signer }`, where `signer: ChallengeSigner` (`(challenge) => Promise<hex signature>`) signs with the tweaked key; `null` without a CSPRNG.
+
+### Validator constants
+
+- `BASE_FEE_LAMPORTS_PER_SIGNATURE` (`5000n`) — the whole fee: lamports per required signature.
+- `NATIVE_DECIMALS` (`9`) — 1 ARCH = 10^9 lamports.
+- `SIGNATURE_VALIDITY_BLOCKS` (`150`) — blocks a transaction stays valid after its recent blockhash.
+- `TRANSACTION_ALREADY_IN_POOL` — the duplicate-send rejection, verbatim; `FEE_PAYER_REJECTED` — the lowercase prefix of the fee-payer rejection (match case-insensitively).
 
 ## Example: Creating and Sending a Transaction
 

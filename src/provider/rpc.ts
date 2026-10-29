@@ -7,7 +7,11 @@ import {
 } from '../struct/processed-transaction';
 import { Pubkey } from '../struct/pubkey';
 import { RuntimeTransaction } from '../struct/runtime-transaction';
-import { ProgramAccount, AccountFilter } from '../struct/program-account';
+import {
+  ProgramAccount,
+  AccountFilter,
+  ProgramAccountFilter,
+} from '../struct/program-account';
 import { ArchRpcError, postData, processResult } from '../utils';
 import { BlockTransactionFilter } from '../struct/block-transaction-filter';
 import { BlockTransactionsParams } from '../struct/block-transactions-params';
@@ -247,7 +251,7 @@ export class RpcConnection implements Provider {
    */
   async getProgramAccounts(
     programId: Pubkey,
-    filters?: AccountFilter[],
+    filters?: ReadonlyArray<AccountFilter | ProgramAccountFilter>,
   ): Promise<ProgramAccount[]> {
     const result = await postData(this.nodeUrl, Action.GET_PROGRAM_ACCOUNTS, [
       serializeWithUint8Array(programId),

@@ -11,7 +11,11 @@ import {
   ProcessedTransaction,
   ProcessedTransactionStatus,
 } from '../../struct/processed-transaction';
-import { AccountFilter, ProgramAccount } from '../../struct/program-account';
+import {
+  AccountFilter,
+  ProgramAccount,
+  ProgramAccountFilter,
+} from '../../struct/program-account';
 import { Pubkey } from '../../struct/pubkey';
 import { RuntimeTransaction } from '../../struct/runtime-transaction';
 import { TransactionListParams } from '../../struct/transaction-list-params';
@@ -295,7 +299,7 @@ export class Maestro implements Provider {
    */
   async getProgramAccounts(
     programId: Pubkey,
-    filters?: AccountFilter[],
+    filters?: ReadonlyArray<AccountFilter | ProgramAccountFilter>,
   ): Promise<ProgramAccount[]> {
     const params = {
       program_id: serializeWithUint8Array(programId),

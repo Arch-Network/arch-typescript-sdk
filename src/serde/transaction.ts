@@ -3,14 +3,19 @@ import {
   MAX_SIGNERS,
   RUNTIME_TX_SIZE_LIMIT,
 } from '../constants';
-import { RuntimeTransaction } from '../struct/runtime-transaction';
+import {
+  ReadonlyRuntimeTransaction,
+  RuntimeTransaction,
+} from '../struct/runtime-transaction';
 import {
   serialize as serializeMessage,
   toHex as messageToHex,
   toNumberArray as messageToNumberArray,
 } from './sanitized-message';
 
-export const serialize = (transaction: RuntimeTransaction): Uint8Array => {
+export const serialize = (
+  transaction: ReadonlyRuntimeTransaction,
+): Uint8Array => {
   if (transaction.signatures.length > MAX_SIGNERS) {
     throw new Error(
       `too many signatures: allowed ${MAX_SIGNERS}, found ${transaction.signatures.length}`,
@@ -32,10 +37,13 @@ export const serialize = (transaction: RuntimeTransaction): Uint8Array => {
   ]);
 };
 
-export const serializedSize = (transaction: RuntimeTransaction): number =>
-  serialize(transaction).length;
+export const serializedSize = (
+  transaction: ReadonlyRuntimeTransaction,
+): number => serialize(transaction).length;
 
-export const checkTxSizeLimit = (transaction: RuntimeTransaction): void => {
+export const checkTxSizeLimit = (
+  transaction: ReadonlyRuntimeTransaction,
+): void => {
   const size = serializedSize(transaction);
   if (size > RUNTIME_TX_SIZE_LIMIT) {
     throw new Error(

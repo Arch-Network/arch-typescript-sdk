@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import vectors from './fixtures/program-helpers-vectors.json';
-import { bytesToHex, hexToBytes } from '../codec/bytes';
+import { bytesEqual, bytesToHex, hexToBytes } from '../codec/bytes';
 import { encodeU64LE } from '../codec/borsh';
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
@@ -19,6 +19,7 @@ import {
   associatedTokenAddress,
   createAssociatedTokenAccountInstruction,
   ensureAssociatedTokenAccountInstruction,
+  missingAtaInstructions,
   tokenTransferInstruction,
 } from '../token/instructions';
 import type { Instruction } from '../struct/instruction';
@@ -198,5 +199,83 @@ describe('tokenTransferInstruction', () => {
     expect(() =>
       tokenTransferInstruction(SOURCE, DESTINATION, SENDER, 1n << 64n),
     ).toThrow(/u64 out of range/);
+  });
+});
+
+describe('missingAtaInstructions', () => {
+  const OWNER = key(0x05);
+  const RECIPIENT = key(0x07);
+  const MINT_A = key(0x0a);
+  const MINT_B = key(0x0b);
+
+  function reader(existing: readonly Uint8Array[]) {
+    const asked: Uint8Array[] = [];
+    return {
+      asked,
+      accountExists: async (pubkey: Uint8Array) => {
+        asked.push(pubkey);
+        return existing.some((account) => bytesEqual(account, pubkey));
+      },
+    };
+  }
+
+  it('creates every ATA without reading when Create is idempotent', async () => {
+    const accounts = reader([associatedTokenAddress(OWNER, MINT_A)]);
+    const creates = await missingAtaInstructions(accounts, {
+      owner: OWNER,
+      mints: [MINT_A, MINT_B],
+      ataCreateIsIdempotent: true,
+    });
+    expect(accounts.asked).toEqual([]);
+    expect(creates).toEqual([
+      ensureAssociatedTokenAccountInstruction(OWNER, MINT_A),
+      ensureAssociatedTokenAccountInstruction(OWNER, MINT_B),
+    ]);
+  });
+
+  it('probes each ATA and creates only the absent ones, in input order, when Create is not idempotent', async () => {
+    const accounts = reader([associatedTokenAddress(OWNER, MINT_A)]);
+    const creates = await missingAtaInstructions(accounts, {
+      owner: OWNER,
+      mints: [MINT_A, MINT_B],
+      ataCreateIsIdempotent: false,
+    });
+    expect(accounts.asked).toEqual([
+      associatedTokenAddress(OWNER, MINT_A),
+      associatedTokenAddress(OWNER, MINT_B),
+    ]);
+    expect(creates).toEqual([
+      ensureAssociatedTokenAccountInstruction(OWNER, MINT_B),
+    ]);
+  });
+
+  it("funds someone else's ATA from the payer, who alone signs", async () => {
+    const [create] = await missingAtaInstructions(reader([]), {
+      owner: RECIPIENT,
+      mints: [MINT_A],
+      payer: SENDER,
+      ataCreateIsIdempotent: false,
+    });
+    expect(create).toEqual(
+      createAssociatedTokenAccountInstruction({
+        payer: SENDER,
+        ata: associatedTokenAddress(RECIPIENT, MINT_A),
+        owner: RECIPIENT,
+        mint: MINT_A,
+      }),
+    );
+  });
+
+  it("propagates the reader's failure rather than guessing", async () => {
+    const failing = {
+      accountExists: () => Promise.reject(new Error('upstream down')),
+    };
+    await expect(
+      missingAtaInstructions(failing, {
+        owner: OWNER,
+        mints: [MINT_A],
+        ataCreateIsIdempotent: false,
+      }),
+    ).rejects.toThrow('upstream down');
   });
 });

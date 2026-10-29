@@ -2,7 +2,10 @@ import { describe, expect, it } from 'vitest';
 
 import vectors from './fixtures/program-helpers-vectors.json';
 import { transactionId } from '../txid';
-import type { RuntimeTransaction } from '../struct/runtime-transaction';
+import type {
+  ReadonlyRuntimeTransaction,
+  RuntimeTransaction,
+} from '../struct/runtime-transaction';
 
 interface WireRuntimeTransaction {
   version: number;
@@ -55,5 +58,26 @@ describe('transactionId', () => {
       signatures: [new Uint8Array(64)],
     };
     expect(transactionId(resigned)).not.toBe(claim.txid);
+  });
+
+  it('takes a readonly, frozen transaction', () => {
+    const [claim] = vectors.txid;
+    if (claim === undefined) throw new Error('missing vector');
+    const tx = fromWire(claim.runtime_transaction);
+    const frozen: ReadonlyRuntimeTransaction = Object.freeze({
+      version: tx.version,
+      signatures: Object.freeze([...tx.signatures]),
+      message: Object.freeze({
+        header: Object.freeze({ ...tx.message.header }),
+        account_keys: Object.freeze([...tx.message.account_keys]),
+        recent_blockhash: tx.message.recent_blockhash,
+        instructions: Object.freeze(
+          tx.message.instructions.map((ix) =>
+            Object.freeze({ ...ix, accounts: Object.freeze([...ix.accounts]) }),
+          ),
+        ),
+      }),
+    });
+    expect(transactionId(frozen)).toBe(claim.txid);
   });
 });

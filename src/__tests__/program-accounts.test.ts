@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { RpcConnection } from '../provider/rpc';
+import type { ProgramAccountFilter } from '../struct/program-account';
 
 function answering(result: unknown) {
   const fetchMock = vi.fn(async (_url: string, _init: RequestInit) =>
@@ -28,6 +29,31 @@ describe('RpcConnection.getProgramAccounts', () => {
     expect(body.params).toEqual([
       Array.from(program),
       [{ DataSize: 165 }, { DataContent: { offset: 32, bytes: [1, 2, 3] } }],
+    ]);
+  });
+
+  it('sends a ProgramAccountFilter unchanged, alongside an AccountFilter', async () => {
+    const fetchMock = answering([]);
+    const program = new Uint8Array(32).fill(7);
+    const filters: readonly ProgramAccountFilter[] = Object.freeze([
+      { DataSize: 165 },
+      { DataContent: { offset: 32, bytes: [4, 5] } },
+    ]);
+
+    await new RpcConnection('http://node').getProgramAccounts(program, [
+      ...filters,
+      { DataContent: { offset: 0, bytes: Uint8Array.of(6) } },
+    ]);
+
+    const init = fetchMock.mock.calls[0]?.[1];
+    const body = JSON.parse(init?.body as string);
+    expect(body.params).toEqual([
+      Array.from(program),
+      [
+        { DataSize: 165 },
+        { DataContent: { offset: 32, bytes: [4, 5] } },
+        { DataContent: { offset: 0, bytes: [6] } },
+      ],
     ]);
   });
 

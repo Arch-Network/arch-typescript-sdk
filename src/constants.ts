@@ -37,6 +37,21 @@ export const MAX_SIGNERS = 16;
 
 export const MAX_TRANSACTIONS_PER_BLOCK = 1024;
 
+/** Lamports the validator charges the fee payer per required signature (arch-network `tpu/src/lib.rs` `BASE_FEE_PER_SIGNATURE`); there is no other fee component. */
+export const BASE_FEE_LAMPORTS_PER_SIGNATURE = 5_000n;
+
+/** Decimals of the native balance unit: 1 ARCH = 10^9 lamports (arch-network `token/src/native_mint.rs` `DECIMALS`). */
+export const NATIVE_DECIMALS = 9;
+
+/** Blocks after its recent blockhash for which a transaction stays valid (arch-network `DEFAULT_SIGNATURE_VALIDITY_BLOCKS`). */
+export const SIGNATURE_VALIDITY_BLOCKS = 150;
+
+/** The validator's JSON-RPC rejection of a duplicate send (`TransactionPoolError::TxExists`, `validator/src/rpc/methods.rs`), verbatim: an earlier send of the same transaction is already in the pool. */
+export const TRANSACTION_ALREADY_IN_POOL = 'transaction already exists in pool';
+
+/** Lowercase prefix of the validator's fee-payer rejection (`InvalidFeePayer`, `check_fee_payer`); the rest of the wording differs across validator versions, so match it case-insensitively. */
+export const FEE_PAYER_REJECTED = 'fee payer must be';
+
 // base58: "TokenT4em53UrV4gSvZ3nCS2mZeHaqTLapwt6iZt6Mk"
 export const TOKEN_PROGRAM_ID = new Uint8Array([
   6, 221, 246, 225, 185, 234, 132, 65, 44, 16, 184, 223, 2, 28, 16, 15, 200,
