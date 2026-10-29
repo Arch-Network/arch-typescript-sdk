@@ -165,7 +165,7 @@ Transfers lamports from one account to another.
 
 - `fromPubkey: Pubkey` — Sender account public key (signer, writable)
 - `toPubkey: Pubkey` — Recipient account public key (writable)
-- `lamports: bigint` — Amount to transfer
+- `lamports: bigint` — Amount to transfer; must fit in a u64 (throws `InvalidArgumentError` otherwise)
 
 **Example:**
 
@@ -211,6 +211,48 @@ const ix = allocate(account, 256n);
 
 **Usage Note:**
 After constructing an instruction with these helpers, use the SDK's serialization utilities (see above) to serialize and send the instruction as part of a transaction.
+
+## Program SDK Helpers
+
+Chain-level building blocks for program SDKs (account decoders, instruction encoders, error tables). All take and return `Uint8Array`/`bigint` and need no global `Buffer`.
+
+### Bytes
+
+- `hexToBytes(hex)` / `bytesToHex(bytes)` — lowercase, unprefixed hex; `hexToBytes` trims, accepts either case, refuses odd length, `0x` and non-hex.
+- `bytesToBase58(bytes)` / `base58ToBytes(text)` — base58 keys; `base58ToBytes` always returns 32 bytes and refuses a longer value.
+- `decodeBase64(text)` — forgiving base64 (`atob` semantics).
+- `asciiBytes(text)` / `asciiOf(bytes)` — ASCII only (PDA seeds, account strings).
+- `bytesEqual(a, b)`, `isHex(value)`, `toByteArray(value)` (copies a `Uint8Array` or a JSON `number[]`).
+
+### Little-endian integers
+
+- `encodeU16LE`, `encodeU32LE`, `encodeI32LE` (`number`) and `encodeU64LE`, `encodeU128LE`, `encodeI64LE`, `encodeI128LE` (`bigint`) throw `InvalidArgumentError` for a value outside the type instead of masking it.
+- `decodeU16LE`, `decodeU32LE`, `decodeI32LE` (`number`), `decodeU64LE`, `decodeU128LE`, `decodeI64LE`, `decodeI128LE` (`bigint`), `decodeBool`, `decodePubkey` take `(data, offset)`.
+
+### Program errors
+
+```typescript
+import { decodeProgramError, programErrorTable, bytesToHex } from '@arch-network/arch-sdk';
+
+const tables = new Map([
+  [bytesToHex(programId), programErrorTable(idl.errors, { decodesWithLogs: false })],
+]);
+const processed = await rpc.getProcessedTransaction(txid);
+decodeProgramError(processed ?? null, tables); // { code, name, message? } | null
+```
+
+`decodeProgramError` reads `custom program error: 0xN` from a failed status, looks up the failing instruction's program in `tables` (keyed by lowercase hex program id) and prefers a matching `AnchorError` log line. Unless the table sets `decodesWithLogs`, a failure with logs is not decoded, since the code may come from an inner CPI.
+
+### Tokens
+
+- `decodeAplMint(data)`, `decodeAplTokenAccount(data)`, `APL_MINT_SIZE` (82), `APL_TOKEN_ACCOUNT_SIZE` (165); short data throws `MalformedAplAccountError`.
+- `associatedTokenAddress(owner, mint)` — `PubkeyUtil.getAssociatedTokenAddress` with off-curve owners allowed.
+- `createAssociatedTokenAccountInstruction({ payer, ata, owner, mint })` — the associated-token program's `Create` (data `[1]`); `ensureAssociatedTokenAccountInstruction(owner, mint)` is the self-funded form.
+- `tokenTransferInstruction(source, destination, owner, amount)` — the token program's `Transfer` (opcode 3).
+
+### Transaction id
+
+- `transactionId(tx: RuntimeTransaction): string` — the id the validator issues for a signed transaction: `hex(sha256(hex(sha256(serialize(tx)))))`.
 
 ## Example: Creating and Sending a Transaction
 
