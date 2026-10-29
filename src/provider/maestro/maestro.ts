@@ -299,7 +299,7 @@ export class Maestro implements Provider {
   ): Promise<ProgramAccount[]> {
     const params = {
       program_id: serializeWithUint8Array(programId),
-      filters: filters,
+      filters: filters === undefined ? undefined : serializeWithUint8Array(filters),
     };
 
     const response = await fetch(`${this.url}/rpc/program/accounts`, {
@@ -314,6 +314,7 @@ export class Maestro implements Provider {
     }
 
     const result = (await response.json()) as ProgramAccountResponse;
+    if (Array.isArray(result.data) && result.data.length === 0) return [];
     return deserializeWithUint8Array<ProgramAccount[]>(result.data);
   }
 
