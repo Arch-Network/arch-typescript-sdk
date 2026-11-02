@@ -7,7 +7,11 @@ export {
   RUNTIME_TX_SIZE_LIMIT,
   RUNTIME_TX_VERSION,
   ALLOWED_RUNTIME_TX_VERSIONS,
+  MAX_ACCOUNTS_PER_TRANSACTION,
+  MAX_INSTRUCTION_COUNT_PER_TRANSACTION,
   MAX_TX_BATCH_SIZE,
+  MAX_ACCOUNTS_BATCH_SIZE,
+  MAX_RECENT_TRANSACTIONS_OFFSET,
   MAX_SIGNERS,
   MAX_TRANSACTIONS_PER_BLOCK,
   SYSTEM_PROGRAM_ID,
@@ -39,7 +43,10 @@ export type { MessageHeader } from './struct/header';
 export { MessageHeaderSchema } from './struct/header';
 export type { Pubkey } from './struct/pubkey';
 export { PubkeySchema } from './struct/pubkey';
-export type { RuntimeTransaction, Signature } from './struct/runtime-transaction';
+export type {
+  RuntimeTransaction,
+  Signature,
+} from './struct/runtime-transaction';
 export type { UtxoMeta, UtxoMetaData } from './struct/utxo';
 export { UtxoMetaSchema } from './struct/utxo';
 export type { Block, FullBlock } from './struct/block';
