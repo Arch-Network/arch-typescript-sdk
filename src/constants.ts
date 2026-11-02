@@ -23,8 +23,14 @@ export enum Action {
   GET_TRANSACTION_STATUS = 'get_transaction_status',
 }
 
-/** Serialized RuntimeTransaction size limit (Solana PACKET_DATA_SIZE). */
-export const RUNTIME_TX_SIZE_LIMIT = 1232;
+/** Serialized RuntimeTransaction size limit. */
+export const RUNTIME_TX_SIZE_LIMIT = 4096;
+
+/** Maximum accounts a single transaction can reference (enforced at sanitize). */
+export const MAX_ACCOUNTS_PER_TRANSACTION = 50;
+
+/** Maximum instructions in a single transaction message. */
+export const MAX_INSTRUCTION_COUNT_PER_TRANSACTION = 255;
 
 /** The only RuntimeTransaction.version accepted by the network. */
 export const RUNTIME_TX_VERSION = 0;
@@ -32,6 +38,12 @@ export const RUNTIME_TX_VERSION = 0;
 export const ALLOWED_RUNTIME_TX_VERSIONS = [RUNTIME_TX_VERSION] as const;
 
 export const MAX_TX_BATCH_SIZE = 100;
+
+/** Maximum pubkeys the validator accepts in one `get_multiple_accounts` call. */
+export const MAX_ACCOUNTS_BATCH_SIZE = 100;
+
+/** Maximum `offset` accepted by `recent_transactions`. */
+export const MAX_RECENT_TRANSACTIONS_OFFSET = 10_000;
 
 export const MAX_SIGNERS = 16;
 
@@ -60,14 +72,14 @@ export const BPF_LOADER_PROGRAM_ID = new Uint8Array([
 
 // base58: "VoteProgram11111111111111111111111111111111"
 export const VOTE_PROGRAM_ID = new Uint8Array([
-  7, 97, 72, 37, 227, 237, 86, 6, 249, 190, 178, 214, 177, 8, 63, 226, 34,
-  198, 130, 48, 216, 183, 167, 155, 11, 12, 86, 34, 0, 0, 0, 0,
+  7, 97, 72, 37, 227, 237, 86, 6, 249, 190, 178, 214, 177, 8, 63, 226, 34, 198,
+  130, 48, 216, 183, 167, 155, 11, 12, 86, 34, 0, 0, 0, 0,
 ]);
 
 // base58: "StakeProgram1111111111111111111111111111111"
 export const STAKE_PROGRAM_ID = new Uint8Array([
-  6, 161, 216, 23, 183, 136, 220, 118, 238, 58, 149, 122, 111, 233, 45, 126,
-  42, 165, 35, 109, 10, 154, 58, 130, 3, 20, 197, 133, 0, 0, 0, 0,
+  6, 161, 216, 23, 183, 136, 220, 118, 238, 58, 149, 122, 111, 233, 45, 126, 42,
+  165, 35, 109, 10, 154, 58, 130, 3, 20, 197, 133, 0, 0, 0, 0,
 ]);
 
 // base58: "ComputeBudget111111111111111111111111111111"

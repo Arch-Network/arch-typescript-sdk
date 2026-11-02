@@ -1,4 +1,4 @@
-import { Action } from '../constants';
+import { Action, MAX_ACCOUNTS_BATCH_SIZE } from '../constants';
 import { AccountInfoResult, AccountInfoWithPubkey } from '../struct/account';
 import { Block, FullBlock } from '../struct/block';
 import {
@@ -144,9 +144,7 @@ export class RpcConnection implements Provider {
    * @param blockHash The block hash.
    * @returns A promise that resolves with the full block or undefined if not found.
    */
-  async getFullBlockByHash(
-    blockHash: string,
-  ): Promise<FullBlock | undefined> {
+  async getFullBlockByHash(blockHash: string): Promise<FullBlock | undefined> {
     const params = [blockHash, BlockTransactionFilter.FULL];
     const result = await postData(this.nodeUrl, Action.GET_BLOCK, params);
 
@@ -367,18 +365,25 @@ export class RpcConnection implements Provider {
 
   /**
    * Gets multiple accounts by their public keys.
+   *
+   * The validator accepts at most MAX_ACCOUNTS_BATCH_SIZE pubkeys per call, so
+   * larger inputs are sent as consecutive calls. The result keeps input order.
    * @param pubkeys Array of public keys.
    * @returns A promise that resolves with an array of AccountInfoWithPubkey or null for missing accounts.
    */
   async getMultipleAccounts(
     pubkeys: Pubkey[],
   ): Promise<(AccountInfoWithPubkey | null)[]> {
-    const result = await postData(
-      this.nodeUrl,
-      Action.GET_MULTIPLE_ACCOUNTS,
-      serializeWithUint8Array(pubkeys),
-    );
-    return processResult<(AccountInfoWithPubkey | null)[]>(result);
+    const accounts: (AccountInfoWithPubkey | null)[] = [];
+    for (let i = 0; i < pubkeys.length; i += MAX_ACCOUNTS_BATCH_SIZE) {
+      const result = await postData(
+        this.nodeUrl,
+        Action.GET_MULTIPLE_ACCOUNTS,
+        serializeWithUint8Array(pubkeys.slice(i, i + MAX_ACCOUNTS_BATCH_SIZE)),
+      );
+      accounts.push(...processResult<(AccountInfoWithPubkey | null)[]>(result));
+    }
+    return accounts;
   }
 
   /**
@@ -386,10 +391,7 @@ export class RpcConnection implements Provider {
    * @returns A promise that resolves with the network public key string.
    */
   async getNetworkPubkey(): Promise<string> {
-    const result = await postData(
-      this.nodeUrl,
-      Action.GET_NETWORK_PUBKEY,
-    );
+    const result = await postData(this.nodeUrl, Action.GET_NETWORK_PUBKEY);
     return processResult<string>(result);
   }
 
